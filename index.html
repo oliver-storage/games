@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extrator de Impostos → Excel</title>
+    
+    <!-- Scripts de Terceiros (CDN) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
+    
+    <!-- CSS Local -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Extrator de Impostos → Excel</h1>
+            <p>Processa PDFs de protocolos de impostos e gera planilha estruturada</p>
+        </div>
+        
+        <div class="content">
+            <!-- Status -->
+            <div class="status info" id="status"></div>
+            
+            <!-- Upload Section -->
+            <div class="upload-section" id="uploadSection">
+                <label for="fileInput" class="upload-label">
+                    📁 Escolher arquivo PDF
+                </label>
+                <input 
+                    type="file" 
+                    id="fileInput" 
+                    class="file-input" 
+                    accept=".pdf,.html"
+                    multiple
+                >
+                <div class="file-info">
+                    Selecione um ou mais arquivos PDF ou HTML
+                </div>
+                <div class="file-name" id="fileName"></div>
+                <div class="progress-bar" id="progressBar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+            
+            <!-- Button Group -->
+            <div class="button-group">
+                <button class="btn btn-primary" id="processBtn" disabled>
+                    ⚙️ Processar Arquivos
+                </button>
+                <button class="btn btn-secondary" id="clearBtn">
+                    🔄 Limpar
+                </button>
+            </div>
+            
+            <!-- Report -->
+            <div class="report" id="report">
+                <div class="verification-box">
+                    <div class="report-title">📋 Relatório de Verificação</div>
+                    
+                    <div class="report-section">
+                        <div class="report-title">Total de Páginas</div>
+                        <div class="report-content" id="totalPages">-</div>
+                    </div>
+                    
+                    <div class="report-section">
+                        <div class="report-title">Páginas Processadas</div>
+                        <div class="report-content" id="processedPages">-</div>
+                    </div>
+                    
+                    <div class="report-section">
+                        <div class="report-title">Páginas Sem Dados</div>
+                        <div class="report-content" id="emptyPages">-</div>
+                    </div>
+                    
+                    <div class="report-section">
+                        <div class="report-title">Total de Linhas Geradas</div>
+                        <div class="report-content">
+                            <span id="totalLines" style="font-size: 18px; font-weight: 700; color: #667eea;">0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="report-section">
+                        <div class="verification-result" id="verificationResult">
+                            ⏳ Analisando...
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Table Preview -->
+            <div class="table-preview" id="tablePreview">
+                <div class="report-title">👁️ Pré-visualização dos Dados</div>
+                <table id="dataTable">
+                    <thead>
+                        <tr>
+                            <th>EMPRESA</th>
+                            <th>IMPOSTO</th>
+                            <th>PERÍODO</th>
+                            <th>VENCIMENTO</th>
+                            <th>VALOR</th>
+                            <th>AVISO</th>
+                            <th>LUCRO %</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Local -->
+    <script src="js/app.js"></script>
+</body>
+</html>
