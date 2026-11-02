@@ -117,43 +117,69 @@ function desenhaDeco(c, d){ const [tipo,col,lin]=d; const f=DECO[tipo]; if(!f) r
   if (PAREDE.has(tipo)) f(c, x, (tipo==='quadro'||tipo==='janela'||tipo==='relogio') ? lin*T : lin); else f(c, x, lin*T); }
 
 // ---------- Personagens (originais) ----------
-// p: {id, x, y (topo), w, h, dir, anim, vx, chao, guarda, dash, agach}
+// Galeria de visuais que o jogador escolhe para cada membro da família
+const VISUAIS = [
+  { id:'oculos',   nome:'Homem de óculos', pele:'#c68642', cabelo:'curto',     corCab:'#1b1b1b', roupa:'#1f3a93', calca:'#2c3e50', oculos:true, largo:true },
+  { id:'barba',    nome:'Homem de barba',  pele:'#e0ac69', cabelo:'curto',     corCab:'#6b4423', roupa:'#2e86c1', calca:'#34495e', barba:true, largo:true },
+  { id:'bone',     nome:'Jovem de boné',   pele:'#8d5524', cabelo:'bone',      corCab:'#f39c12', roupa:'#c0392b', calca:'#34495e', regata:true, largo:true },
+  { id:'longo',    nome:'Mulher cabelo longo', pele:'#e0ac69', cabelo:'longo', corCab:'#6b4423', roupa:'#e84393', calca:'#5d6d7e', saia:true },
+  { id:'cacheado', nome:'Mulher cacheada', pele:'#6b3e26', cabelo:'cacheado',  corCab:'#1b1b1b', roupa:'#f1c40f', calca:'#2c3e50' },
+  { id:'vovo',     nome:'Vovó',            pele:'#f1c27d', cabelo:'coque',     corCab:'#dfe6e9', roupa:'#8e44ad', calca:'#f1c27d', oculos:true, saia:true, vestido:true },
+  { id:'vovoh',    nome:'Vovô',            pele:'#d9a066', cabelo:'careca',    corCab:'#ecf0f1', roupa:'#7f8c8d', calca:'#4a4f55', bigode:true, suspensorio:true },
+  { id:'menino',   nome:'Menino',          pele:'#c68642', cabelo:'curto',     corCab:'#5a3a1e', roupa:'#27ae60', calca:'#2980b9', crianca:true },
+  { id:'menina',   nome:'Menina',          pele:'#f1c27d', cabelo:'chiquinhas',corCab:'#e1b12c', roupa:'#ff79c6', calca:'#ff79c6', crianca:true, saia:true, vestido:true },
+  { id:'moletom',  nome:'Jovem de moletom',pele:'#d9a066', cabelo:'topete',    corCab:'#2b1a10', roupa:'#16a085', calca:'#2d3436', mochila:true },
+];
+const visual = id => VISUAIS.find(v=>v.id===id) || VISUAIS[0];
+
 function quadroNegro(c, x, y, w, h){ c.fillStyle='#8b5a2b'; c.fillRect(x-2,y-2,w+4,h+4); c.fillStyle='#2f5d3a'; c.fillRect(x,y,w,h);
   c.strokeStyle='rgba(255,255,255,.75)'; c.lineWidth=1; c.beginPath(); c.moveTo(x+3,y+h*.35); c.lineTo(x+w*.45,y+h*.35); c.moveTo(x+3,y+h*.65); c.lineTo(x+w*.7,y+h*.65); c.stroke(); }
+
+// p: {id (poder: william|kelly|junior), vis, x, y (topo), w, h, dir, anim, vx, chao, guarda, dash, agach}
 function desenhaPers(c, p){
-  if (p.id==='junior' && p.agach){ // encolhido: mini Junior
+  if (p.agach){ // encolhido: miniatura da pessoa
     c.save(); const cx=p.x+p.w/2, base=p.y+p.h; c.translate(cx, base); c.scale(.48,.48);
     desenhaPers(c, {...p, agach:false, x:-p.w/2, y:-42, h:42}); c.restore(); return;
   }
+  const V=visual(p.vis);
   const cx=p.x+p.w/2, base=p.y+p.h, d=p.dir||1, passo=(p.chao&&p.vx)?Math.sin((p.anim||0)*18)*3:0;
-  const H=p.h, cab=H*0.24, tronco=H*0.36, perna=H-cab-tronco;
-  const yC=p.y+cab/2, yT=p.y+cab, yP=yT+tronco;
-  const pele={william:'#c68642', kelly:'#e0ac69', junior:'#8d5524'}[p.id];
-  const calca={william:'#2c3e50', kelly:'#5d6d7e', junior:'#34495e'}[p.id];
-  c.fillStyle=calca; c.fillRect(cx-6,yP,5,perna-2+passo/2); c.fillRect(cx+1,yP,5,perna-2-passo/2);
+  const H=p.h, cab=H*(V.crianca?0.32:0.24), tronco=H*(V.crianca?0.33:0.36), perna=H-cab-tronco;
+  const yC=p.y+cab/2, yT=p.y+cab, yP=yT+tronco, lt=V.largo?11:(V.crianca?7:8);
+  // pernas e sapatos
+  c.fillStyle=V.vestido?V.pele:V.calca; c.fillRect(cx-6,yP,5,perna-2+passo/2); c.fillRect(cx+1,yP,5,perna-2-passo/2);
   c.fillStyle='#222'; c.fillRect(cx-7,base-3,7,3); c.fillRect(cx,base-3,7,3);
-  if (p.id==='william'){ // forte e inteligente: ombros largos, óculos
-    c.fillStyle='#1f3a93'; c.fillRect(cx-11,yT,22,tronco); c.fillStyle='#fff'; c.fillRect(cx-2,yT,4,5);
-    c.fillStyle=pele; c.fillRect(cx+(d>0?8:-12),yT+3+(p.dash>0?-3:0),5,tronco-4); c.fillRect(cx+(d>0?-12:8),yT+3,4,tronco-6);
-    c.fillStyle=pele; c.beginPath(); c.arc(cx,yC,cab/2+1,0,7); c.fill();
-    c.fillStyle='#1b1b1b'; c.beginPath(); c.arc(cx,yC-2,cab/2+1,Math.PI,0); c.fill(); c.fillRect(cx-cab/2-1,yC-3,3,4);
-    c.strokeStyle='#111'; c.lineWidth=1.5; c.strokeRect(cx+d*2-4,yC-1,4,3); c.strokeRect(cx+d*2+1,yC-1,4,3);
-    c.fillStyle='#5a3a1e'; c.fillRect(cx-3,yC+3,6,1.5);
-  }
-  if (p.id==='junior'){ // forte, regata, boné para trás
-    c.fillStyle='#c0392b'; c.fillRect(cx-9,yT,18,tronco); c.fillStyle=pele; c.fillRect(cx-9,yT,4,4); c.fillRect(cx+5,yT,4,4);
-    c.fillStyle=pele; c.fillRect(cx+(d>0?8:-13),yT+2,5,tronco-3); c.fillRect(cx+(d>0?-13:8),yT+2,5,tronco-5);
-    c.fillStyle=pele; c.beginPath(); c.arc(cx,yC,cab/2+.5,0,7); c.fill();
-    c.fillStyle='#f39c12'; c.beginPath(); c.arc(cx,yC-2,cab/2+.5,Math.PI,0); c.fill(); c.fillRect(cx-d*cab/2-5,yC-3,7,3);
-    c.fillStyle='#111'; c.fillRect(cx+d*3-1,yC,2,2);
-  }
-  if (p.id==='kelly'){ // professora, cabelo castanho, quadro-negro de escudo
-    c.fillStyle='#6b4423'; c.fillRect(cx-d*2-6,yC-2,12,cab+5);
-    c.fillStyle='#e84393'; c.fillRect(cx-8,yT,16,tronco*.6); c.fillStyle='#5d6d7e'; c.beginPath(); c.moveTo(cx-8,yT+tronco*.6); c.lineTo(cx+8,yT+tronco*.6); c.lineTo(cx+10,yP+3); c.lineTo(cx-10,yP+3); c.fill();
-    c.fillStyle=pele; c.beginPath(); c.arc(cx,yC,cab/2,0,7); c.fill();
-    c.fillStyle='#6b4423'; c.beginPath(); c.arc(cx,yC-2,cab/2,Math.PI,0); c.fill(); c.fillRect(cx-d*cab/2-1,yC-2,3,cab);
-    c.fillStyle='#111'; c.fillRect(cx+d*3-1,yC,2,2);
-    if (p.guarda){ quadroNegro(c, cx-17, p.y-14, 34, 10); c.fillStyle=pele; c.fillRect(cx-9,p.y-4,3,8); c.fillRect(cx+6,p.y-4,3,8); }
-    else { quadroNegro(c, cx+(d>0?8:-14), p.y+4, 6, H-12); }
+  // cabelo comprido atrás
+  if (V.cabelo==='longo'){ c.fillStyle=V.corCab; c.fillRect(cx-d*2-6,yC-2,12,cab+6); }
+  if (V.cabelo==='cacheado'){ c.fillStyle=V.corCab; c.beginPath(); c.arc(cx,yC,cab/2+5,0,7); c.fill(); }
+  if (V.mochila){ c.fillStyle='#34495e'; c.fillRect(cx-d*10-3,yT+2,6,tronco*.6); }
+  // tronco
+  if (V.vestido){ c.fillStyle=V.roupa; c.beginPath(); c.moveTo(cx-lt+2,yT); c.lineTo(cx+lt-2,yT); c.lineTo(cx+lt+2,yP+4); c.lineTo(cx-lt-2,yP+4); c.closePath(); c.fill();
+    c.fillStyle='rgba(255,255,255,.8)'; for(let k=0;k<3;k++) c.fillRect(cx-5+k*4,yT+tronco/2,2,2); }
+  else if (V.saia){ c.fillStyle=V.roupa; c.fillRect(cx-lt,yT,lt*2,tronco*.6); c.fillStyle=V.calca; c.beginPath(); c.moveTo(cx-lt,yT+tronco*.6); c.lineTo(cx+lt,yT+tronco*.6); c.lineTo(cx+lt+2,yP+3); c.lineTo(cx-lt-2,yP+3); c.fill(); }
+  else { c.fillStyle=V.roupa; c.fillRect(cx-lt,yT,lt*2,tronco);
+    if (V.regata){ c.fillStyle=V.pele; c.fillRect(cx-lt,yT,4,4); c.fillRect(cx+lt-4,yT,4,4); }
+    if (V.suspensorio){ c.fillStyle='#c0392b'; c.fillRect(cx-5,yT,2,tronco); c.fillRect(cx+3,yT,2,tronco); }
+    if (V.id==='oculos'){ c.fillStyle='#fff'; c.fillRect(cx-2,yT,4,5); } }
+  // braços
+  c.fillStyle=V.pele; c.fillRect(cx+(d>0?lt-3:-lt-1),yT+3+(p.dash>0?-3:0),4,tronco-4);
+  // cabeça
+  c.fillStyle=V.pele; c.beginPath(); c.arc(cx,yC,cab/2+(V.largo?1:0),0,7); c.fill();
+  c.fillStyle=V.corCab;
+  if (V.cabelo==='curto'||V.cabelo==='longo'){ c.beginPath(); c.arc(cx,yC-2,cab/2+(V.largo?1:0),Math.PI,0); c.fill(); if(V.cabelo==='longo') c.fillRect(cx-d*cab/2-1,yC-2,3,cab); }
+  if (V.cabelo==='cacheado'){ c.beginPath(); c.arc(cx,yC-3,cab/2+2,Math.PI,0); c.fill(); }
+  if (V.cabelo==='coque'){ c.beginPath(); c.arc(cx,yC-cab/2,4.5,0,7); c.fill(); c.beginPath(); c.arc(cx,yC-1,cab/2,Math.PI,0); c.fill(); }
+  if (V.cabelo==='careca'){ c.fillRect(cx-cab/2,yC-2,3,5); c.fillRect(cx+cab/2-3,yC-2,3,5); }
+  if (V.cabelo==='bone'){ c.beginPath(); c.arc(cx,yC-2,cab/2+.5,Math.PI,0); c.fill(); c.fillRect(cx-d*cab/2-5,yC-3,7,3); }
+  if (V.cabelo==='topete'){ c.beginPath(); c.arc(cx,yC-1,cab/2+.5,Math.PI,0); c.fill(); c.fillRect(cx+d*2-2,yC-cab/2-1,6,3); }
+  if (V.cabelo==='chiquinhas'){ c.beginPath(); c.arc(cx,yC-2,cab/2,Math.PI,0); c.fill(); c.beginPath(); c.arc(cx-cab/2-2,yC,3.5,0,7); c.arc(cx+cab/2+2,yC,3.5,0,7); c.fill(); }
+  // rosto
+  c.fillStyle='#111'; c.fillRect(cx+d*3-1,yC,2,2);
+  if (V.barba){ c.fillStyle=V.corCab; c.beginPath(); c.arc(cx,yC+3,cab/2,0.1,Math.PI-0.1); c.fill(); }
+  if (V.bigode){ c.fillStyle=V.corCab; c.fillRect(cx+d*1-3,yC+3,7,2); }
+  if (V.oculos){ c.strokeStyle='#111'; c.lineWidth=1.2; c.strokeRect(cx+d*2-4,yC-1,4,3); c.strokeRect(cx+d*2+1,yC-1,4,3); }
+  // acessório do poder de proteção: quadro-negro
+  if (p.id==='kelly'){
+    if (p.guarda){ quadroNegro(c, cx-17, p.y-14, 34, 10); c.fillStyle=V.pele; c.fillRect(cx-9,p.y-4,3,8); c.fillRect(cx+6,p.y-4,3,8); }
+    else quadroNegro(c, cx+(d>0?lt-2:-lt-4), p.y+4, 6, H-12);
   }
 }

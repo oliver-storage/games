@@ -65,6 +65,18 @@ footer{text-align:center;font-size:11px;opacity:.6;padding:6px}
 #c-pulo{background:#22b04a;box-shadow:0 4px 0 #15803d}
 #c-acao{background:#d97706;box-shadow:0 4px 0 #92400e}
 #c-troca{width:52px;font-size:22px}
+/* montar família */
+#t-familia{padding:16px;gap:12px;overflow-y:auto;background:#1b1046}
+.campo{display:flex;flex-direction:column;gap:6px;font-size:13px;color:#c9bff0;font-weight:700}
+.campo input,.mtopo input{background:#120a30;border:2px solid #4c3a99;border-radius:12px;padding:10px 12px;color:#fff;font-size:17px;font-weight:700;width:100%;font-family:inherit}
+.campo input:focus,.mtopo input:focus{outline:none;border-color:#3ddc84}
+.membro{background:#2e2257;border-radius:16px;padding:10px;display:flex;flex-direction:column;gap:8px}
+.mtopo{display:flex;gap:8px;align-items:center}
+.poder{background:#7c3aed;border-radius:10px;padding:6px 10px;font-size:13px;font-weight:800;white-space:nowrap}
+.galeria{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scroll-snap-type:x mandatory}
+.vis{flex-shrink:0;background:#1b1046;border-radius:12px;padding:3px;border:3px solid transparent;scroll-snap-align:start}
+.vis.on{border-color:#3ddc84;background:#2a5a40}
+.vis canvas{display:block;width:46px;height:58px}
 /* cena */
 #t-cena{background:#000;justify-content:center}
 #t-cena .palco{flex-direction:column}
@@ -100,12 +112,20 @@ footer{text-align:center;font-size:11px;opacity:.6;padding:6px}
 
   <section class="tela on" id="t-inicio">
     <div class="topo"><a href="../index.html">‹ Jogos</a><button id="b-som">🔊</button></div>
-    <h1>FAMÍLIA<br><span>OLIVEIRA</span></h1>
+    <h1>FAMÍLIA<br><span id="titulo-sob">OLIVEIRA</span></h1>
     <p class="hist">📺 A TV puxou a família para dentro do videogame. Só juntos eles saem!</p>
     <div id="elenco"></div>
     <button class="btn verde" id="b-jogar">Jogar</button>
+    <button class="btn sec" id="b-familia">👨‍👩‍👦 Montar minha família</button>
     <button class="btn sec" id="b-historia">▶ Ver a história</button>
     <footer id="rodape"></footer>
+  </section>
+
+  <section class="tela" id="t-familia">
+    <div class="topo"><button id="f-volta">‹ Início</button><b>Monte sua família</b><span></span></div>
+    <label class="campo">Sobrenome da família<input id="f-sobrenome" maxlength="14" placeholder="Oliveira"></label>
+    <div id="f-membros"></div>
+    <button class="btn verde" id="f-salvar">Salvar família</button>
   </section>
 
   <section class="tela" id="t-fases">

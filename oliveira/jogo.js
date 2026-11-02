@@ -1,5 +1,5 @@
 // Família Oliveira — plataforma e quebra-cabeça em 2D
-const CONFIG = { SISTEMA:'Família Oliveira', VERSAO:'0.4.0.0', DESENVOLVEDOR:'Vettore Sistemas' };
+const CONFIG = { SISTEMA:'Família Oliveira', VERSAO:'0.5.0.0', DESENVOLVEDOR:'Vettore Sistemas' };
 const $ = id => document.getElementById(id);
 const VW = 480, VH = 300, DT = 1/60, G = 1400;
 const fmtT = s => { s=Math.floor(s); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); };
@@ -11,12 +11,25 @@ const PERS = [
   { id:'junior',  nome:'Junior',  curto:'Junior',  vel:160, pulo:-530, h:42, ic:'🤏', poder:'Encolher: fica pequeno para passar por vãos e apertar botões' },
 ];
 const KE=1, JU=2;
+const PODERES = ['💪 Força','🛡️ Proteção','🤏 Encolher'];
+const FAM_PADRAO = { sobrenome:'Oliveira', membros:[{nome:'William',vis:'oculos'},{nome:'Kelly',vis:'longo'},{nome:'Junior',vis:'bone'}] };
 const H_AGACH = 20;
 
 // ---------- Save ----------
 const SK='familia_oliveira_v3';
-let S; try{ S=Object.assign({desbloq:1,est:{},tempo:{},som:true,nome:'',viuAbertura:false}, JSON.parse(localStorage.getItem(SK)||'{}')); }catch(e){ S={desbloq:1,est:{},tempo:{},som:true,nome:'',viuAbertura:false}; }
+let S; try{ S=Object.assign({desbloq:1,est:{},tempo:{},som:true,nome:'',viuAbertura:false,familia:null}, JSON.parse(localStorage.getItem(SK)||'{}')); }catch(e){ S={desbloq:1,est:{},tempo:{},som:true,nome:'',viuAbertura:false,familia:null}; }
 const salvar = () => { try{ localStorage.setItem(SK, JSON.stringify(S)); }catch(e){} };
+
+// ---------- Família do jogador ----------
+const fam = () => S.familia || FAM_PADRAO;
+function aplicaFamilia(){
+  const F2=fam();
+  PERS.forEach((p,i)=>{ const m=F2.membros[i]||FAM_PADRAO.membros[i]; p.nome=p.curto=m.nome; p.vis=m.vis; });
+  const sob=F2.sobrenome||'Oliveira';
+  document.title='Família '+sob; const t=$('titulo-sob'); if(t) t.textContent=sob.toUpperCase();
+}
+const ORIGINAIS={William:0,Kelly:1,Junior:2};
+const trocaNomes = txt => txt.replace(/\{(\d)\}/g,(_,i)=>PERS[+i].curto).replace(/\b(William|Kelly|Junior)\b/g, n=>PERS[ORIGINAIS[n]].curto);
 
 // ---------- Som ----------
 const Som = { ctx:null,
@@ -319,7 +332,7 @@ function desafiar(n,t){
 const CENAS = {
   abertura: [
     { cen:'salaNoite', atores:[['kelly',170,1],['junior',220,1],['william',300,-1]], quem:'junior', txt:'A TV tá chiando…', fx:'chuvisco' },
-    { cen:'salaNoite', atores:[['kelly',170,1],['junior',220,1],['william',300,-1]], quem:'kelly', txt:'William, dá uma olhada nela.', fx:'chuvisco' },
+    { cen:'salaNoite', atores:[['kelly',170,1],['junior',220,1],['william',300,-1]], quem:'kelly', txt:'{0}, dá uma olhada nela.', fx:'chuvisco' },
     { cen:'salaNoite', atores:[['kelly',170,1],['junior',220,1],['william',95,-1,'tapa']], quem:'william', txt:'É só mau contato…', fx:'chuvisco' },
     { cen:'salaNoite', atores:[['kelly',170,1],['junior',220,1],['william',95,-1]], quem:'junior', txt:'Aaaah!', fx:'suga', dur:2.6 },
     { cen:'tv', atores:[['william',170,1],['kelly',230,1],['junior',290,1]], quem:'william', txt:'Estamos DENTRO do videogame!' },
@@ -348,7 +361,7 @@ const CEN_DECO = {
 };
 let cena=null, cenaRaf=0, ccv, cctx;
 function tocarCena(lista, depois){
-  parar(); fecharModal(); cena={ lista, i:0, t:0, depois, ult:performance.now(), letras:0 };
+  parar(); fecharModal(); lista=lista.map(q=>({...q, txt:trocaNomes(q.txt)})); cena={ lista, i:0, t:0, depois, ult:performance.now(), letras:0 };
   mostrar('cena'); ajustaCanvas(ccv,cctx); cancelAnimationFrame(cenaRaf); cenaRaf=requestAnimationFrame(passoCena);
 }
 function pararCena(){ cena=null; cancelAnimationFrame(cenaRaf); }
@@ -417,6 +430,27 @@ function balao(c, q, ax, ay){
   let resto=txt; linhas.forEach((ln,k)=>{ const parte=resto.slice(0,ln.length); resto=resto.slice(ln.length+1); c.fillText(parte, bx+12, by+33+k*18); });
 }
 
+// ---------- Montar a família ----------
+let famTmp=null, famDepois=null;
+function telaFamilia(depois){
+  famDepois=depois||null; famTmp=JSON.parse(JSON.stringify(fam()));
+  $('f-sobrenome').value=famTmp.sobrenome;
+  $('f-membros').innerHTML = famTmp.membros.map((m,i)=>`<div class="membro"><div class="mtopo"><span class="poder">${PODERES[i]}</span><input data-i="${i}" maxlength="12" value="${m.nome}" placeholder="Nome"></div>
+    <div class="galeria">${VISUAIS.map(v=>`<button class="vis ${v.id===m.vis?'on':''}" data-i="${i}" data-v="${v.id}" title="${v.nome}"><canvas width="46" height="58"></canvas></button>`).join('')}</div></div>`).join('');
+  $('f-membros').querySelectorAll('.vis').forEach(b=>{ const c2=b.querySelector('canvas').getContext('2d'); c2.save(); c2.translate(23,54); c2.scale(1.05,1.05);
+    desenhaPers(c2,{id:'x',vis:b.dataset.v,x:-9,y:-44,w:18,h:44,dir:1,anim:0,vx:0,chao:true,guarda:false,dash:0,agach:false}); c2.restore(); });
+  mostrar('familia');
+}
+$('f-membros').addEventListener('click',e=>{ const b=e.target.closest('.vis'); if(!b) return; const i=+b.dataset.i; famTmp.membros[i].vis=b.dataset.v;
+  b.parentElement.querySelectorAll('.vis').forEach(x=>x.classList.toggle('on',x===b)); Som.troca(); });
+$('f-salvar').onclick=()=>{ Som.init();
+  famTmp.sobrenome = limpa($('f-sobrenome').value.trim()) .slice(0,14) || 'Oliveira';
+  if(!$('f-sobrenome').value.trim()) famTmp.sobrenome='Oliveira';
+  $('f-membros').querySelectorAll('input').forEach(inp=>{ const i=+inp.dataset.i, v=inp.value.trim(); famTmp.membros[i].nome = v ? limpa(v).slice(0,12) : FAM_PADRAO.membros[i].nome; });
+  S.familia=famTmp; salvar(); aplicaFamilia(); apresentar();
+  const d=famDepois; famDepois=null; d ? d() : mostrar('inicio'); };
+$('f-volta').onclick=()=>mostrar('inicio');
+
 // ---------- Telas ----------
 function mostrar(t){ document.querySelectorAll('.tela').forEach(e=>e.classList.remove('on')); $('t-'+t).classList.add('on'); }
 function modal(h){ $('mbox').innerHTML=h; $('modal').hidden=false; }
@@ -431,11 +465,13 @@ $('lista').addEventListener('click',e=>{ const b=e.target.closest('.fase'); if(!
 function iniciarFase(n, extra){ Som.init(); fecharModal(); tocarCena(CENAS['f'+n], ()=>preFase(n, extra)); }
 function preFase(n,extra){
   const f=FASES[n-1]; mostrar('fases');
-  modal(`<h2>Fase ${n}</h2><p class="sub">${f.nome}</p>${extra||''}<div class="caixa">💡 ${f.dica}</div>
+  modal(`<h2>Fase ${n}</h2><p class="sub">${f.nome}</p>${extra||''}<div class="caixa">💡 ${trocaNomes(f.dica)}</div>
     <button class="btn verde" id="m-ir">Jogar!</button><button class="btn sec" id="m-volta">Voltar</button>`);
   $('m-ir').onclick=()=>jogar(n); $('m-volta').onclick=telaFases;
 }
-$('b-jogar').onclick=()=>{ Som.init(); if(!S.viuAbertura){ S.viuAbertura=true; salvar(); tocarCena(CENAS.abertura, telaFases); } else telaFases(); };
+function comecar(){ if(!S.viuAbertura){ S.viuAbertura=true; salvar(); tocarCena(CENAS.abertura, telaFases); } else telaFases(); }
+$('b-jogar').onclick=()=>{ Som.init(); if(!S.familia) telaFamilia(comecar); else comecar(); };
+$('b-familia').onclick=()=>{ Som.init(); telaFamilia(); };
 $('b-historia').onclick=()=>{ Som.init(); tocarCena(CENAS.abertura, ()=>mostrar('inicio')); };
 $('b-volta').onclick=()=>mostrar('inicio');
 $('cena-pular').onclick=e=>{ e.stopPropagation(); pularCena(); };
@@ -459,7 +495,7 @@ let DUELO=null;
   cv=$('tela'); ctx=cv.getContext('2d'); ccv=$('cena'); cctx=ccv.getContext('2d');
   $('rodape').textContent=`${CONFIG.SISTEMA} v${CONFIG.VERSAO}•Desenvolvido por ${CONFIG.DESENVOLVEDOR}`;
   $('b-som').textContent=S.som?'🔊':'🔇';
-  apresentar();
+  aplicaFamilia(); apresentar();
   const P=new URLSearchParams(location.search), n=+P.get('f');
   if(n>=1 && n<=FASES.length){
     DUELO={ f:n, t:+P.get('t')||0, nm:limpa(P.get('nm')) }; history.replaceState(null,'',location.pathname);
