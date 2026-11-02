@@ -1,116 +1,292 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Extrator de Impostos → Excel</title>
-    
-    <!-- Scripts de Terceiros (CDN) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
-    
-    <!-- CSS Local -->
-    <link rel="stylesheet" href="css/styles.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Dupla</title>
+<style>
+:root{--azul:#1e4fd8;--azul2:#163fa8;--fundo:#0f1b3d;--card:#16285a;--card2:#1d3370;--txt:#fff;--sub:#a9b8e6;--ok:#22c55e;--erro:#ef4444;--ouro:#f5b301}
+body.ouro{--azul:#c58a00;--azul2:#8f6400;--card2:#3a2f10}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--fundo);color:var(--txt);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;user-select:none}
+.app{width:100%;max-width:420px;padding:16px;flex:1;display:flex;flex-direction:column}
+.tela{display:none;flex-direction:column;gap:14px;flex:1}
+.tela.on{display:flex}
+h1{font-size:44px;text-align:center;letter-spacing:4px;margin-top:24px}
+h1 span{color:var(--azul)}
+.sub{color:var(--sub);text-align:center;font-size:15px;line-height:1.4}
+.btn{background:var(--azul);color:#fff;border:0;border-radius:14px;padding:16px;font-size:17px;font-weight:700;cursor:pointer;width:100%}
+.btn:active{transform:scale(.98);background:var(--azul2)}
+.btn.sec{background:var(--card2)}
+.btn.zap{background:#16a34a}
+input{background:var(--card);border:2px solid var(--card2);color:#fff;border-radius:12px;padding:14px;font-size:16px;width:100%;text-align:center}
+input:focus{outline:none;border-color:var(--azul)}
+.box{background:var(--card);border-radius:16px;padding:16px}
+.banner{background:linear-gradient(135deg,var(--azul),#7c3aed);border-radius:16px;padding:16px;text-align:center;line-height:1.45}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.stats b{display:block;font-size:22px}
+.stats small{color:var(--sub);font-size:12px}
+.topo{display:flex;justify-content:space-between;align-items:center}
+.alvo{text-align:center}
+.alvo small{color:var(--sub);font-size:13px;letter-spacing:2px}
+.alvo b{display:block;font-size:64px;line-height:1}
+.pts{font-size:22px;font-weight:700}
+.combo{font-size:15px;color:var(--ouro);font-weight:700;min-width:60px;text-align:right}
+.barra{height:10px;background:var(--card);border-radius:6px;overflow:hidden}
+.barra i{display:block;height:100%;background:var(--azul);width:100%;transition:width .1s linear}
+.barra.alerta i{background:var(--erro)}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:6px}
+.cel{aspect-ratio:1;border:0;border-radius:16px;background:var(--card2);color:#fff;font-size:34px;font-weight:800;cursor:pointer;transition:transform .08s,background .15s}
+.cel:active{transform:scale(.93)}
+.cel.sel{background:var(--azul);transform:scale(.95)}
+.cel.ok{background:var(--ok)}
+.cel.erro{background:var(--erro)}
+.pop{position:fixed;left:50%;top:38%;transform:translate(-50%,0);font-size:34px;font-weight:900;pointer-events:none;animation:sobe .7s forwards;text-shadow:0 2px 8px #000}
+@keyframes sobe{to{transform:translate(-50%,-70px);opacity:0}}
+.grande{font-size:72px;font-weight:900;text-align:center;line-height:1}
+.centro{text-align:center}
+.vs{display:flex;justify-content:space-around;text-align:center}
+.vs b{display:block;font-size:30px}
+.vs small{color:var(--sub)}
+.meta{height:14px;background:var(--fundo);border-radius:8px;overflow:hidden;margin-top:8px}
+.meta i{display:block;height:100%;background:var(--ouro)}
+.espaco{flex:1}
+footer{color:var(--sub);font-size:12px;padding:12px;text-align:center;opacity:.7}
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>📊 Extrator de Impostos → Excel</h1>
-            <p>Processa PDFs de protocolos de impostos e gera planilha estruturada</p>
-        </div>
-        
-        <div class="content">
-            <!-- Status -->
-            <div class="status info" id="status"></div>
-            
-            <!-- Upload Section -->
-            <div class="upload-section" id="uploadSection">
-                <label for="fileInput" class="upload-label">
-                    📁 Escolher arquivo PDF
-                </label>
-                <input 
-                    type="file" 
-                    id="fileInput" 
-                    class="file-input" 
-                    accept=".pdf,.html"
-                    multiple
-                >
-                <div class="file-info">
-                    Selecione um ou mais arquivos PDF ou HTML
-                </div>
-                <div class="file-name" id="fileName"></div>
-                <div class="progress-bar" id="progressBar">
-                    <div class="progress-fill" id="progressFill"></div>
-                </div>
-            </div>
-            
-            <!-- Button Group -->
-            <div class="button-group">
-                <button class="btn btn-primary" id="processBtn" disabled>
-                    ⚙️ Processar Arquivos
-                </button>
-                <button class="btn btn-secondary" id="clearBtn">
-                    🔄 Limpar
-                </button>
-            </div>
-            
-            <!-- Report -->
-            <div class="report" id="report">
-                <div class="verification-box">
-                    <div class="report-title">📋 Relatório de Verificação</div>
-                    
-                    <div class="report-section">
-                        <div class="report-title">Total de Páginas</div>
-                        <div class="report-content" id="totalPages">-</div>
-                    </div>
-                    
-                    <div class="report-section">
-                        <div class="report-title">Páginas Processadas</div>
-                        <div class="report-content" id="processedPages">-</div>
-                    </div>
-                    
-                    <div class="report-section">
-                        <div class="report-title">Páginas Sem Dados</div>
-                        <div class="report-content" id="emptyPages">-</div>
-                    </div>
-                    
-                    <div class="report-section">
-                        <div class="report-title">Total de Linhas Geradas</div>
-                        <div class="report-content">
-                            <span id="totalLines" style="font-size: 18px; font-weight: 700; color: #667eea;">0</span>
-                        </div>
-                    </div>
-                    
-                    <div class="report-section">
-                        <div class="verification-result" id="verificationResult">
-                            ⏳ Analisando...
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Table Preview -->
-            <div class="table-preview" id="tablePreview">
-                <div class="report-title">👁️ Pré-visualização dos Dados</div>
-                <table id="dataTable">
-                    <thead>
-                        <tr>
-                            <th>EMPRESA</th>
-                            <th>IMPOSTO</th>
-                            <th>PERÍODO</th>
-                            <th>VENCIMENTO</th>
-                            <th>VALOR</th>
-                            <th>AVISO</th>
-                            <th>LUCRO %</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+<div class="app">
 
-    <!-- Script Local -->
-    <script src="js/app.js"></script>
+  <!-- INÍCIO -->
+  <section class="tela on" id="t-inicio">
+    <h1>DUP<span>LA</span></h1>
+    <p class="sub">Toque em <b>dois números</b> que somem o <b>alvo</b>.<br>60 segundos. Acertos seguidos multiplicam os pontos.</p>
+    <div class="banner" id="convite" style="display:none"></div>
+    <input id="nome" maxlength="16" placeholder="Seu nome">
+    <button class="btn" id="b-desafio" style="display:none">Aceitar desafio</button>
+    <button class="btn" id="b-dia">Desafio do dia</button>
+    <button class="btn sec" id="b-treino">Treino</button>
+    <div class="box stats">
+      <div><b id="s-nivel">1</b><small>Nível</small></div>
+      <div><b id="s-rec">0</b><small>Recorde</small></div>
+      <div><b id="s-hoje">–</b><small>Hoje</small></div>
+    </div>
+    <p class="sub" id="s-tema"></p>
+  </section>
+
+  <!-- JOGO -->
+  <section class="tela" id="t-jogo">
+    <div class="topo">
+      <div class="pts" id="j-pts">0</div>
+      <div class="alvo"><small>ALVO</small><b id="j-alvo">10</b></div>
+      <div class="combo" id="j-combo"></div>
+    </div>
+    <div class="barra" id="j-barra"><i id="j-tempo"></i></div>
+    <div class="grid" id="j-grid"></div>
+  </section>
+
+  <!-- FIM -->
+  <section class="tela" id="t-fim">
+    <p class="sub" id="f-titulo" style="margin-top:20px"></p>
+    <div class="grande" id="f-pts">0</div>
+    <p class="centro sub" id="f-rec"></p>
+    <div class="box" id="f-dupla" style="display:none"></div>
+    <div class="espaco"></div>
+    <button class="btn zap" id="f-share1"></button>
+    <button class="btn sec" id="f-share2" style="display:none"></button>
+    <button class="btn sec" id="f-novo">Jogar de novo</button>
+    <button class="btn sec" id="f-menu">Menu</button>
+  </section>
+
+  <!-- RESULTADO RECEBIDO -->
+  <section class="tela" id="t-res">
+    <h1 style="font-size:32px">RESULTADO<br>DA DUPLA</h1>
+    <div class="box" id="r-box"></div>
+    <div class="espaco"></div>
+    <button class="btn" id="r-jogar">Jogar</button>
+  </section>
+
+</div>
+<footer id="rodape"></footer>
+
+<script>
+const CONFIG = { SISTEMA:'Dupla', VERSAO:'0.1.0.0', DESENVOLVEDOR:'Vettore Sistemas', TEMPO:60, META_DUPLA:400 };
+
+const $ = id => document.getElementById(id);
+const fmt = n => Number(n).toLocaleString('pt-BR');
+const ls = {
+  get(k,d){ try{ const v=localStorage.getItem('dupla_'+k); return v===null?d:JSON.parse(v); }catch(e){ return d; } },
+  set(k,v){ try{ localStorage.setItem('dupla_'+k, JSON.stringify(v)); }catch(e){} }
+};
+function rng(seed){ let a=seed>>>0; return ()=>{ a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+const hoje = () => { const d=new Date(); return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate(); };
+const base = () => location.origin + location.pathname;
+const limpa = s => (s||'Amigo').toString().replace(/[<>&"]/g,'').slice(0,16) || 'Amigo';
+const nome = () => limpa($('nome').value.trim() || 'Jogador');
+
+// ---- Parâmetros de link ----
+const P = new URLSearchParams(location.search);
+let desafio = null, resultado = null;
+if (P.get('r')) resultado = { seed:+P.get('r'), a:+P.get('a')||0, an:limpa(P.get('an')), b:+P.get('b')||0, bn:limpa(P.get('bn')) };
+else if (P.get('d')) desafio = { seed:+P.get('d'), s:+P.get('s')||0, n:limpa(P.get('n')) };
+
+// ---- Navegação ----
+function mostrar(t){ document.querySelectorAll('.tela').forEach(e=>e.classList.remove('on')); $('t-'+t).classList.add('on'); }
+
+function aplicarTema(){
+  const ouro = ls.get('ouro', false);
+  document.body.classList.toggle('ouro', ouro);
+  $('s-tema').textContent = ouro ? 'Tema Ouro desbloqueado ✓' : `Some ${fmt(CONFIG.META_DUPLA)} pts em dupla com um amigo e os dois ganham o tema Ouro.`;
+}
+function nivel(){ return Math.floor(Math.sqrt(ls.get('total',0)/150))+1; }
+
+function telaInicio(){
+  $('s-nivel').textContent = nivel();
+  $('s-rec').textContent = fmt(ls.get('recorde',0));
+  const dia = ls.get('dia',{});
+  $('s-hoje').textContent = dia.d===hoje() ? fmt(dia.p) : '–';
+  if (desafio){
+    $('convite').style.display='block';
+    $('convite').innerHTML = `<b>${desafio.n}</b> te desafiou com <b>${fmt(desafio.s)} pts</b>.<br>Juntos, cheguem a ${fmt(CONFIG.META_DUPLA)} e <b>os dois</b> ganham o tema Ouro.`;
+    $('b-desafio').style.display='block';
+  }
+  aplicarTema();
+  mostrar('inicio');
+}
+
+// ---- Jogo ----
+let G = null, modo = 'treino';
+
+function iniciar(seed, m){
+  ls.set('nome', nome());
+  modo = m;
+  G = { r:rng(seed), seed, grid:[], alvo:0, pts:0, combo:1, ult:0, sel:-1, fim:Date.now()+CONFIG.TEMPO*1000, timer:null };
+  for (let i=0;i<16;i++) G.grid.push(novo());
+  novoAlvo();
+  montarGrid();
+  mostrar('jogo');
+  render();
+  G.timer = setInterval(tick, 100);
+}
+function novo(){ return 1+Math.floor(G.r()*9); }
+function existePar(t){ for(let i=0;i<16;i++) for(let j=i+1;j<16;j++) if(G.grid[i]+G.grid[j]===t) return true; return false; }
+function novoAlvo(){
+  let t = 8+Math.floor(G.r()*7);
+  if (!existePar(t)){ const i=Math.floor(G.r()*16); let j=Math.floor(G.r()*15); if(j>=i) j++; t=G.grid[i]+G.grid[j]; }
+  G.alvo = t;
+}
+function montarGrid(){
+  const g=$('j-grid'); g.innerHTML='';
+  for (let i=0;i<16;i++){ const b=document.createElement('button'); b.className='cel'; b.onpointerdown=e=>{e.preventDefault(); toque(i);}; g.appendChild(b); }
+}
+function render(){
+  const cels = $('j-grid').children;
+  for (let i=0;i<16;i++){ cels[i].textContent=G.grid[i]; cels[i].classList.toggle('sel', G.sel===i); }
+  $('j-alvo').textContent = G.alvo;
+  $('j-pts').textContent = fmt(G.pts);
+  $('j-combo').textContent = G.combo>1 ? 'x'+G.combo : '';
+}
+function toque(i){
+  if (!G) return;
+  if (G.sel===-1){ G.sel=i; render(); return; }
+  if (G.sel===i){ G.sel=-1; render(); return; }
+  const a=G.sel, b=i; G.sel=-1;
+  if (G.grid[a]+G.grid[b]===G.alvo){
+    const agora=Date.now();
+    G.combo = (agora-G.ult<2500) ? Math.min(G.combo+1,5) : 1;
+    G.ult = agora;
+    const ganho = 10*G.combo;
+    G.pts += ganho;
+    G.grid[a]=novo(); G.grid[b]=novo(); novoAlvo();
+    flash([a,b],'ok'); pop('+'+ganho, 'var(--ok)'); vibrar(15);
+  } else {
+    G.combo=1; G.fim-=2000;
+    flash([a,b],'erro'); pop('-2s', 'var(--erro)'); vibrar([40,30,40]);
+  }
+  render();
+}
+function flash(ids, cls){ const c=$('j-grid').children; ids.forEach(i=>{ c[i].classList.add(cls); setTimeout(()=>c[i].classList.remove(cls),220); }); }
+function pop(txt, cor){ const p=document.createElement('div'); p.className='pop'; p.textContent=txt; p.style.color=cor; document.body.appendChild(p); setTimeout(()=>p.remove(),700); }
+function vibrar(p){ try{ navigator.vibrate && navigator.vibrate(p); }catch(e){} }
+function tick(){
+  const rest = Math.max(0, G.fim-Date.now());
+  $('j-tempo').style.width = (rest/(CONFIG.TEMPO*1000)*100)+'%';
+  $('j-barra').classList.toggle('alerta', rest<10000);
+  if (rest<=0) terminar();
+}
+
+// ---- Fim ----
+function terminar(){
+  clearInterval(G.timer);
+  const pts=G.pts, seed=G.seed; G=null;
+  ls.set('total', ls.get('total',0)+pts);
+  const rec = ls.get('recorde',0);
+  const novoRec = pts>rec; if (novoRec) ls.set('recorde', pts);
+  if (modo==='dia'){ const d=ls.get('dia',{}); if (d.d!==hoje() || pts>d.p) ls.set('dia',{d:hoje(),p:pts}); }
+
+  $('f-pts').textContent = fmt(pts);
+  $('f-rec').textContent = novoRec ? 'Novo recorde!' : `Recorde: ${fmt(rec)}`;
+  $('f-titulo').textContent = modo==='dia' ? 'DESAFIO DO DIA' : modo==='desafio' ? 'DESAFIO' : 'TREINO';
+  $('f-dupla').style.display='none';
+  $('f-share2').style.display='none';
+
+  const linkDesafio = `${base()}?d=${seed}&s=${pts}&n=${encodeURIComponent(nome())}`;
+  $('f-share1').textContent = 'Desafiar um amigo';
+  $('f-share1').onclick = () => compartilhar(linkDesafio, `Fiz ${fmt(pts)} pts no Dupla. Bate isso? E se a gente somar ${fmt(CONFIG.META_DUPLA)}, os dois ganham o tema Ouro.`);
+
+  if (modo==='desafio' && desafio){
+    const total = pts + desafio.s;
+    const bateu = total >= CONFIG.META_DUPLA;
+    if (bateu) ls.set('ouro', true);
+    const venc = pts>desafio.s ? 'Você venceu!' : pts<desafio.s ? `${desafio.n} venceu.` : 'Empate!';
+    $('f-dupla').style.display='block';
+    $('f-dupla').innerHTML = `
+      <div class="vs"><div><b>${fmt(pts)}</b><small>Você</small></div><div><b>${fmt(desafio.s)}</b><small>${desafio.n}</small></div></div>
+      <p class="centro" style="margin-top:10px"><b>${venc}</b></p>
+      <p class="centro sub" style="margin-top:8px">Dupla: ${fmt(total)} / ${fmt(CONFIG.META_DUPLA)}</p>
+      <div class="meta"><i style="width:${Math.min(100,total/CONFIG.META_DUPLA*100)}%"></i></div>
+      <p class="centro" style="margin-top:8px">${bateu ? '🏆 Meta batida! Tema Ouro liberado.' : 'Faltou pouco. Tentem de novo!'}</p>`;
+    const linkRes = `${base()}?r=${seed}&a=${desafio.s}&an=${encodeURIComponent(desafio.n)}&b=${pts}&bn=${encodeURIComponent(nome())}`;
+    $('f-share1').textContent = `Mandar resultado para ${desafio.n}`;
+    $('f-share1').onclick = () => compartilhar(linkRes, bateu ? `Batemos a meta da dupla! Abre aqui pra pegar seu tema Ouro:` : `Fiz ${fmt(pts)} contra seus ${fmt(desafio.s)}. Veja:`);
+    $('f-share2').style.display='block';
+    $('f-share2').textContent = 'Desafiar outro amigo';
+    $('f-share2').onclick = () => compartilhar(linkDesafio, `Fiz ${fmt(pts)} pts no Dupla. Bate isso?`);
+  }
+
+  $('f-novo').onclick = () => modo==='dia' ? iniciar(hoje(),'dia') : modo==='desafio' ? iniciar(desafio.seed,'desafio') : iniciar(Math.floor(Math.random()*1e9),'treino');
+  aplicarTema();
+  mostrar('fim');
+}
+
+function compartilhar(url, txt){
+  if (navigator.share){ navigator.share({ text:txt, url }).catch(()=>{}); }
+  else { window.open('https://wa.me/?text='+encodeURIComponent(txt+'\n'+url), '_blank'); }
+}
+
+// ---- Resultado recebido ----
+function telaResultado(){
+  const total = resultado.a + resultado.b;
+  const bateu = total >= CONFIG.META_DUPLA;
+  if (bateu) ls.set('ouro', true);
+  $('r-box').innerHTML = `
+    <div class="vs"><div><b>${fmt(resultado.a)}</b><small>${resultado.an}</small></div><div><b>${fmt(resultado.b)}</b><small>${resultado.bn}</small></div></div>
+    <p class="centro sub" style="margin-top:12px">Dupla: ${fmt(total)} / ${fmt(CONFIG.META_DUPLA)}</p>
+    <div class="meta"><i style="width:${Math.min(100,total/CONFIG.META_DUPLA*100)}%"></i></div>
+    <p class="centro" style="margin-top:10px">${bateu ? '🏆 Meta batida! Tema Ouro liberado para você.' : 'A dupla não chegou na meta desta vez.'}</p>`;
+  aplicarTema();
+  mostrar('res');
+}
+
+// ---- Boot ----
+$('rodape').textContent = `${CONFIG.SISTEMA} v${CONFIG.VERSAO}•Desenvolvido por ${CONFIG.DESENVOLVEDOR}`;
+$('nome').value = ls.get('nome','');
+$('b-dia').onclick = () => iniciar(hoje(),'dia');
+$('b-treino').onclick = () => iniciar(Math.floor(Math.random()*1e9),'treino');
+$('b-desafio').onclick = () => iniciar(desafio.seed,'desafio');
+$('f-menu').onclick = telaInicio;
+$('r-jogar').onclick = () => { history.replaceState(null,'',base()); resultado=null; telaInicio(); };
+resultado ? telaResultado() : telaInicio();
+</script>
 </body>
 </html>
