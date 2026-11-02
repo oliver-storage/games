@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#2a1b4a">
+<title>Desenrola 3D</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#fff;background:radial-gradient(ellipse at 50% 15%,#ffb38a 0%,#c25b8f 35%,#3b1d5e 75%,#1c0f33 100%);user-select:none;-webkit-user-select:none}
+button{font-family:inherit;color:inherit;border:0;cursor:pointer;background:none}
+#cena{position:fixed;inset:0;touch-action:none}
+.hud{position:fixed;left:0;right:0;top:0;padding:10px 12px;display:flex;flex-direction:column;gap:8px;z-index:2;max-width:620px;margin:0 auto;pointer-events:none}
+.hud>*{pointer-events:auto}
+.linha1{display:flex;gap:8px;align-items:center}
+.chip{background:rgba(0,0,0,.25);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.2);border-radius:14px;padding:6px 10px;font-weight:800;font-size:14px;white-space:nowrap;color:#fff;text-decoration:none}
+.titulo{flex:1;text-align:center;line-height:1.05}
+.titulo b{font-size:24px;text-shadow:0 2px 10px rgba(0,0,0,.4)}
+.titulo small{display:block;font-size:12px;opacity:.85;font-weight:700}
+.info{display:flex;gap:8px;justify-content:center}
+.nos{font-weight:900}
+.nos.zero{background:rgba(61,220,132,.35);border-color:#3ddc84}
+.base{position:fixed;left:0;right:0;bottom:0;padding:8px 12px calc(12px + env(safe-area-inset-bottom));display:flex;gap:8px;justify-content:center;z-index:2}
+.bt{background:rgba(0,0,0,.25);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.2);border-radius:16px;padding:8px 12px;font-weight:800;font-size:14px;min-width:78px}
+.bt small{display:block;font-size:11px;color:#ffd93b}
+.bt.ativo{background:#ff5b5b;border-color:#fff}
+.bt:active{transform:scale(.95)}
+#toast{position:fixed;left:50%;top:120px;transform:translateX(-50%);background:rgba(0,0,0,.7);padding:9px 16px;border-radius:18px;font-weight:800;font-size:14px;z-index:5;opacity:0;transition:.3s;pointer-events:none;white-space:nowrap}
+#toast.on{opacity:1}
+.grito{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);font-size:46px;font-weight:900;z-index:4;pointer-events:none;animation:grito 1.3s forwards;white-space:nowrap;color:#fff;text-shadow:0 4px 0 #c25b8f,0 0 24px #ffd93b}
+@keyframes grito{0%{transform:translate(-50%,-50%) scale(.2)}25%{transform:translate(-50%,-50%) scale(1.2)}75%{opacity:1}100%{transform:translate(-50%,-90%) scale(1);opacity:0}}
+.modal{position:fixed;inset:0;background:rgba(20,8,40,.6);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10}
+.mbox{background:linear-gradient(160deg,#4a2a7a,#2a1b4a);border:1px solid rgba(255,255,255,.2);border-radius:24px;padding:22px 18px 18px;width:100%;max-width:400px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5);animation:entra .35s cubic-bezier(.34,1.5,.64,1);max-height:92dvh;overflow-y:auto}
+@keyframes entra{from{transform:scale(.7);opacity:0}}
+.mbox h2{font-size:28px}
+.mbox p{margin-top:8px;line-height:1.4;color:#eadcff}
+.estrelas{font-size:54px;letter-spacing:6px;color:rgba(255,255,255,.18);margin:6px 0}
+.estrelas span{display:inline-block;transform:scale(.3);transition:.4s cubic-bezier(.34,1.8,.64,1)}
+.estrelas span.on{color:#ffd93b;transform:scale(1);text-shadow:0 3px 0 #b8860b}
+.estrelas span.vz{transform:scale(1)}
+.btn{display:block;width:100%;padding:14px;border-radius:16px;font-size:18px;font-weight:900;margin-top:10px;background:linear-gradient(180deg,#ff8ac0,#e2508f);box-shadow:0 5px 0 #a8326a}
+.btn.verde{background:linear-gradient(180deg,#5fe07a,#22b04a);box-shadow:0 5px 0 #17803a}
+.btn.sec{background:rgba(255,255,255,.12);box-shadow:0 5px 0 rgba(0,0,0,.3)}
+.btn:active{transform:translateY(3px)}
+.moedas{display:inline-block;margin-top:6px;background:rgba(255,217,59,.15);color:#ffd93b;border-radius:12px;padding:4px 12px;font-weight:900}
+.fases{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px}
+.fz{aspect-ratio:1;border-radius:14px;background:rgba(255,255,255,.12);font-weight:900;font-size:17px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
+.fz small{font-size:9px;color:#ffd93b;margin-top:3px;letter-spacing:-1px}
+.fz.bloq{opacity:.35}
+.fz.atual{background:#e2508f;box-shadow:0 0 0 3px #fff}
+.regras{text-align:left;font-size:14px;line-height:1.5;margin-top:8px}
+.regras li{margin:4px 0 4px 18px}
+footer{position:fixed;bottom:2px;left:0;right:0;text-align:center;font-size:10px;opacity:.5;z-index:1;pointer-events:none}
+</style>
+</head>
+<body>
+<canvas id="cena"></canvas>
+<div class="hud">
+  <div class="linha1">
+    <a class="chip" href="../index.html">‹</a>
+    <button class="chip" id="h-fases">☰</button>
+    <div class="titulo"><b id="h-fase">Fase 1</b><small id="h-sub">Desfaça os nós</small></div>
+    <span class="chip" id="h-moe">🪙 0</span>
+    <button class="chip" id="h-som">🔊</button>
+  </div>
+  <div class="info"><span class="chip nos" id="h-nos">🪢 0 nós</span><span class="chip" id="h-mov">👆 0/0</span><span class="chip" id="h-est">⭐⭐⭐</span></div>
+</div>
+<div class="base">
+  <button class="bt" id="b-desf">↩️ Voltar<small>grátis</small></button>
+  <button class="bt" id="b-dica">💡 Dica<small id="dica-preco">🪙 20</small></button>
+  <button class="bt" id="b-corte">✂️ Cortar<small>🪙 40</small></button>
+  <button class="bt" id="b-rein">🔄 Reiniciar</button>
+</div>
+<div id="toast"></div>
+<div class="modal" id="modal" hidden><div class="mbox" id="mbox"></div></div>
+<footer id="rodape"></footer>
+<script src="../lib/three.min.js"></script>
+<script>
+// Desenrola 3D — Vettore Sistemas
+const CONFIG = { SISTEMA:'Desenrola 3D', VERSAO:'0.1.0.0', DESENVOLVEDOR:'Vettore Sistemas' };
+const $=id=>document.getElementById(id);
+const fmt=n=>Math.round(n).toLocaleString('pt-BR');
+const CORES=['#ff4d6a','#1fb5ff','#ffd93b','#2ecc71','#b56bff','#ff9f1c','#ff5fd2','#00d2c6'];
+const PRECO={dica:20,corte:40,mais:30};
+const TOTAL=60;
+
+// ---------- Save ----------
+const SK='desenrola_3d_v1';
+let S; try{ S=Object.assign({desbloq:1,est:{},moedas:60,som:true,viu:false}, JSON.parse(localStorage.getItem(SK)||'{}')); }catch(e){ S={desbloq:1,est:{},moedas:60,som:true,viu:false}; }
+const salvar=()=>{ try{ localStorage.setItem(SK,JSON.stringify(S)); }catch(e){} };
+
+// ---------- Som ----------
+const Som={ ctx:null,
+  init(){ if(!this.ctx){ try{ this.ctx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(this.ctx&&this.ctx.state==='suspended') this.ctx.resume(); },
+  tom(f,d=.1,tipo='sine',vol=.08,q=0,f2){ if(!S.som||!this.ctx) return; const c=this.ctx,t=c.currentTime+q,o=c.createOscillator(),g=c.createGain();
+    o.type=tipo; o.frequency.setValueAtTime(f,t); o.frequency.exponentialRampToValueAtTime(f2||f*1.2,t+d); g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(.001,t+d); o.connect(g).connect(c.destination); o.start(t); o.stop(t+d+.02); },
+  pega(){ this.tom(500,.1,'triangle',.07,0,800); }, solta(){ this.tom(700,.12,'triangle',.07,0,350); },
+  desata(){ [660,880,1100].forEach((f,i)=>this.tom(f,.12,'sine',.07,i*.05)); }, erro(){ this.tom(180,.15,'square',.05,0,120); },
+  vitoria(){ [523,659,784,1047,1319].forEach((f,i)=>this.tom(f,.22,'triangle',.08,i*.1)); }, moeda(){ this.tom(990,.07,'square',.04); this.tom(1320,.08,'square',.04,.06); },
+  corte(){ this.tom(2000,.08,'sawtooth',.05,0,600); }
+};
+const vibrar=p=>{ try{ navigator.vibrate&&navigator.vibrate(p); }catch(e){} };
+
+// ---------- Geração das fases (sempre solucionáveis) ----------
+function rng(seed){ let a=seed>>>0; return ()=>{ a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function confFase(n){     // poucos furos livres = quebra-cabeça de verdade
+  if(n<=3) return {c:3,r:2,cordas:2}; if(n<=8) return {c:4,r:2,cordas:3}; if(n<=15) return {c:3,r:3,cordas:4};
+  if(n<=25) return {c:4,r:3,cordas:5}; if(n<=40) return {c:5,r:3,cordas:6}; return {c:5,r:3,cordas:7};
+}
+function cruza(p1,p2,p3,p4){
+  const d=(a,b,c)=>(c.x-a.x)*(b.z-a.z)-(b.x-a.x)*(c.z-a.z);
+  const d1=d(p3,p4,p1), d2=d(p3,p4,p2), d3=d(p1,p2,p3), d4=d(p1,p2,p4);
+  return ((d1>0&&d2<0)||(d1<0&&d2>0)) && ((d3>0&&d4<0)||(d3<0&&d4>0));
+}
+function contaNos(cordas, pos){
+  let n=0; const nos=new Set();
+  for(let i=0;i<cordas.length;i++) for(let j=i+1;j<cordas.length;j++){ const a=cordas[i], b=cordas[j]; if(a.cortada||b.cortada) continue;
+    if(cruza(pos(a.p[0]),pos(a.p[1]),pos(b.p[0]),pos(b.p[1]))){ n++; nos.add(i); nos.add(j); } }
+  return {n, nos};
+}
+function gerar(n){
+  const cf=confFase(n), r=rng(n*104729+7), H=cf.c*cf.r;
+  const pos=k=>({x:k%cf.c, z:Math.floor(k/cf.c)});
+  let cordas=null;
+  for(let t=0;t<800&&!cordas;t++){
+    const furos=[...Array(H).keys()].sort(()=>r()-.5).slice(0,cf.cordas*2);
+    const cs=[]; for(let k=0;k<cf.cordas;k++) cs.push({p:[furos[2*k],furos[2*k+1]]});
+    // evita cordas muito curtas ou que passam por cima de outro pino
+    if(cs.some(c=>{ const a=pos(c.p[0]), b=pos(c.p[1]); return Math.abs(a.x-b.x)+Math.abs(a.z-b.z)<2; })) continue;
+    if(contaNos(cs,pos).n===0) cordas=cs;
+  }
+  if(!cordas){ cordas=[]; for(let k=0;k<cf.cordas;k++) cordas.push({p:[k*2,k*2+1]}); }
+  const K=Math.min(3+Math.floor(n/3),12);
+  let melhor=null;
+  for(let tent=0;tent<40;tent++){
+    const cs=cordas.map(c=>({p:[...c.p]}));
+    for(let k=0;k<K;k++){
+      const ocup=new Set(cs.flatMap(c=>c.p)); const livres=[...Array(H).keys()].filter(h=>!ocup.has(h));
+      let best=null, bn=-1;
+      for(let s=0;s<4;s++){ const ci=Math.floor(r()*cs.length), e=Math.floor(r()*2), h=livres[Math.floor(r()*livres.length)];
+        const old=cs[ci].p[e]; cs[ci].p[e]=h; const nn=contaNos(cs,pos).n; cs[ci].p[e]=old; if(nn>bn){ bn=nn; best=[ci,e,h]; } }
+      cs[best[0]].p[best[1]]=best[2];
+    }
+    const nn=contaNos(cs,pos).n;
+    if(!melhor || nn>melhor.n) melhor={cs,n:nn};
+    if(nn>=Math.min(1+Math.floor(n/4), cf.cordas)) break;
+  }
+  // menor número de movimentos (busca em largura) para as estrelas
+  const otimo=buscaOtima(melhor.cs.map(c=>[...c.p]), H, pos, K);
+  const par=otimo||K;
+  return { n, ...cf, H, cordas:melhor.cs.map((c,i)=>({p:c.p, cor:CORES[i%CORES.length], camada:i})), par, limite:par*2+5 };
+}
+function buscaOtima(ini, H, pos, maxProf){
+  const chave=e=>e.map(p=>p.join('.')).join('|');
+  const nos=e=>contaNos(e.map(p=>({p})),pos).n;
+  if(nos(ini)===0) return 0;
+  let fronteira=[ini]; const visto=new Set([chave(ini)]);
+  for(let prof=1; prof<=maxProf; prof++){
+    const prox=[];
+    for(const e of fronteira){
+      const oc=new Set(e.flat()), livres=[...Array(H).keys()].filter(h=>!oc.has(h));
+      for(let ci=0;ci<e.length;ci++) for(let k=0;k<2;k++) for(const h of livres){
+        const n2=e.map(p=>[...p]); n2[ci][k]=h; const ch=chave(n2); if(visto.has(ch)) continue; visto.add(ch);
+        if(nos(n2)===0) return prof; prox.push(n2);
+        if(visto.size>120000) return 0;
+      }
+    }
+    fronteira=prox;
+  }
+  return 0;
+}
+
+// ---------- Three.js ----------
+const renderer=new THREE.WebGLRenderer({canvas:$('cena'),antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(2,devicePixelRatio||1));
+renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.outputEncoding=THREE.sRGBEncoding; renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.05;
+const cena=new THREE.Scene(), cam=new THREE.PerspectiveCamera(40,1,.1,100);
+cena.add(new THREE.HemisphereLight(0xffe2f0,0x3b1d5e,.8));
+const sol=new THREE.DirectionalLight(0xffffff,1.15); sol.position.set(3,10,5); sol.castShadow=true; sol.shadow.mapSize.set(1024,1024);
+Object.assign(sol.shadow.camera,{left:-8,right:8,top:8,bottom:-8,near:1,far:30}); sol.shadow.radius=5; cena.add(sol);
+const brilho=new THREE.PointLight(0xffb38a,.7,30); brilho.position.set(0,5,-6); cena.add(brilho);
+const ESP=1.6;
+let F=null, grupo=null, pinos=[], furos=[], tubos=[], selecionado=null, ocupado=false, modoCorte=false, historico=[], dicaGratis=1, tempo=0;
+function posFuro(k){ return new THREE.Vector3((k%F.c-(F.c-1)/2)*ESP, 0, (Math.floor(k/F.c)-(F.r-1)/2)*ESP); }
+
+function montar(){
+  if(grupo){ cena.remove(grupo); grupo.traverse(o=>{ if(o.geometry) o.geometry.dispose(); }); }
+  grupo=new THREE.Group(); cena.add(grupo); pinos=[]; furos=[]; tubos=[];
+  const W=F.c*ESP+.8, D=F.r*ESP+.8;
+  // tábua de madeira
+  const cv=document.createElement('canvas'); cv.width=512; cv.height=512; const g=cv.getContext('2d');
+  g.fillStyle='#c98a52'; g.fillRect(0,0,512,512);
+  for(let i=0;i<60;i++){ g.strokeStyle=`rgba(${120+Math.random()*40},${70+Math.random()*30},30,.35)`; g.lineWidth=1+Math.random()*3; g.beginPath(); const y=Math.random()*512; g.moveTo(0,y); g.bezierCurveTo(170,y+Math.random()*30-15,340,y+Math.random()*30-15,512,y+Math.random()*20-10); g.stroke(); }
+  const tex=new THREE.CanvasTexture(cv); tex.encoding=THREE.sRGBEncoding;
+  const tabua=new THREE.Mesh(new THREE.BoxGeometry(W,.4,D), new THREE.MeshStandardMaterial({map:tex,roughness:.6}));
+  tabua.position.y=-.2; tabua.receiveShadow=true; tabua.castShadow=true; grupo.add(tabua);
+  const sombra=new THREE.Mesh(new THREE.BoxGeometry(W+.3,.25,D+.3), new THREE.MeshStandardMaterial({color:0x7a4a24,roughness:.7}));
+  sombra.position.y=-.45; grupo.add(sombra);
+  for(let k=0;k<F.H;k++){
+    const anel=new THREE.Mesh(new THREE.CylinderGeometry(.3,.3,.06,28), new THREE.MeshStandardMaterial({color:0x3a2412,roughness:.9,emissive:0x000000}));
+    anel.position.copy(posFuro(k)); anel.position.y=.005; anel.userData.furo=k; grupo.add(anel); furos.push(anel);
+    const buraco=new THREE.Mesh(new THREE.CylinderGeometry(.18,.18,.07,20), new THREE.MeshBasicMaterial({color:0x120804}));
+    buraco.position.copy(anel.position); buraco.position.y=.01; grupo.add(buraco);
+  }
+  F.cordas.forEach((c,ci)=>{
+    c.pinos=c.p.map((h,e)=>{ const pino=new THREE.Group();
+      const corpo=new THREE.Mesh(new THREE.CylinderGeometry(.22,.26,.6,24), new THREE.MeshPhysicalMaterial({color:new THREE.Color(c.cor).convertSRGBToLinear(),roughness:.3,clearcoat:.8}));
+      corpo.position.y=.3; corpo.castShadow=true; pino.add(corpo);
+      const topo=new THREE.Mesh(new THREE.SphereGeometry(.22,20,12,0,Math.PI*2,0,Math.PI/2), corpo.material); topo.position.y=.6; pino.add(topo);
+      const faixa=new THREE.Mesh(new THREE.CylinderGeometry(.265,.265,.08,24), new THREE.MeshStandardMaterial({color:0xffffff,roughness:.4})); faixa.position.y=.15; pino.add(faixa);
+      pino.position.copy(posFuro(h)); pino.userData={corda:ci, ponta:e}; corpo.userData=topo.userData=faixa.userData=pino.userData;
+      grupo.add(pino); pinos.push(pino); return pino; });
+    const mat=new THREE.MeshStandardMaterial({color:new THREE.Color(c.cor).convertSRGBToLinear(),roughness:.45,emissive:new THREE.Color(0x000000)});
+    const tubo=new THREE.Mesh(new THREE.BufferGeometry(), mat); tubo.castShadow=true; grupo.add(tubo); c.tubo=tubo; tubos.push(tubo);
+  });
+  F.cordas.forEach((c,ci)=>refazTubo(ci));
+  ajusta(); atualizaNos(false);
+}
+function alturaCamada(c){ const ord=[...F.cordas].filter(x=>!x.cortada).sort((a,b)=>a.camada-b.camada); return .75+ord.indexOf(c)*.28; }
+function refazTubo(ci){
+  const c=F.cordas[ci]; if(c.cortada) return;
+  const a=c.pinos[0].position.clone(), b=c.pinos[1].position.clone(); a.y+=.62; b.y+=.62;
+  const h=alturaCamada(c), meio=a.clone().lerp(b,.5); meio.y=Math.max(a.y,b.y)+h*.55;
+  const q1=a.clone().lerp(b,.18); q1.y=a.y+h*.6; const q2=a.clone().lerp(b,.82); q2.y=b.y+h*.6;
+  // leve balanço da corda
+  meio.y+=Math.sin(tempo*2+ci)*.03;
+  const curva=new THREE.CatmullRomCurve3([a,q1,meio,q2,b]);
+  c.tubo.geometry.dispose(); c.tubo.geometry=new THREE.TubeGeometry(curva,56,.085,10,false);
+}
+const posLogica=k=>({x:k%F.c, z:Math.floor(k/F.c)});
+let nosAntes=0;
+function atualizaNos(som=true){
+  const {n,nos}=contaNos(F.cordas,posLogica);
+  F.cordas.forEach((c,ci)=>{ if(c.cortada) return; c.emNo=nos.has(ci); });
+  if(som && n<nosAntes){ Som.desata(); vibrar(25); }
+  nosAntes=n; hud(n); return n;
+}
+
+// ---------- Câmera ----------
+function ajusta(){
+  const w=innerWidth,h=innerHeight; renderer.setSize(w,h,false); cam.aspect=w/h;
+  if(!F){ cam.updateProjectionMatrix(); return; }
+  const tanH=Math.tan(cam.fov*Math.PI/360), W=F.c*ESP+1.6, D=F.r*ESP+1.6;
+  const dist=Math.max((D+4.5)/(2*tanH), W/(2*tanH*cam.aspect));
+  cam.position.set(0,dist*.92,dist*.55); cam.lookAt(0,-.3,.35); cam.updateProjectionMatrix();
+}
+addEventListener('resize',ajusta);
+
+// ---------- Animação ----------
+const tweens=[]; function tween(dur,fn){ return new Promise(r=>tweens.push({t:0,dur,fn,r})); }
+function passoTweens(dt){ for(let k=tweens.length-1;k>=0;k--){ const w=tweens[k]; w.t+=dt; const p=Math.min(1,w.t/w.dur); w.fn(p); if(p>=1){ tweens.splice(k,1); w.r(); } } }
+const suave=p=>p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;
+const confetes=[];
+function festa(){ const geo=new THREE.BoxGeometry(.08,.02,.14);
+  for(let i=0;i<120;i++){ const m=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({color:new THREE.Color(CORES[i%CORES.length]).convertSRGBToLinear(),transparent:true}));
+    m.position.set((Math.random()-.5)*2,1,(Math.random()-.5)*2); m.userData={vx:(Math.random()-.5)*8,vy:5+Math.random()*7,vz:(Math.random()-.5)*8,rx:Math.random()*10,vida:2.2}; cena.add(m); confetes.push(m); } }
+function passoConfete(dt){ for(let k=confetes.length-1;k>=0;k--){ const m=confetes[k],u=m.userData; u.vida-=dt; u.vy-=9*dt; m.position.x+=u.vx*dt; m.position.y+=u.vy*dt; m.position.z+=u.vz*dt; m.rotation.x+=u.rx*dt; m.rotation.z+=u.rx*dt*.7; m.material.opacity=Math.min(1,u.vida); if(u.vida<=0){ cena.remove(m); m.material.dispose(); confetes.splice(k,1); } } }
+
+// ---------- Jogada ----------
+function ocupados(){ return new Set(F.cordas.filter(c=>!c.cortada).flatMap(c=>c.p)); }
+function marcaFurosLivres(on){ const oc=ocupados(); furos.forEach((f,k)=>f.material.emissive.setHex(on&&!oc.has(k)?0x2aa860:0)); }
+function selecionar(pino){
+  if(selecionado){ const p=selecionado; tween(.12,t=>{ p.position.y=.5*(1-t); }); }
+  selecionado=pino; marcaFurosLivres(!!pino);
+  if(pino){ Som.pega(); vibrar(10); tween(.15,t=>{ pino.position.y=.5*t; }); }
+}
+async function moverPara(pino,furo){
+  const {corda:ci, ponta:e}=pino.userData, c=F.cordas[ci];
+  historico.push({ p:F.cordas.map(x=>[...x.p]), cam:F.cordas.map(x=>x.camada), mov:F.mov });
+  ocupado=true; selecionado=null; marcaFurosLivres(false);
+  c.camada=Math.max(...F.cordas.map(x=>x.camada))+1;    // a corda movida fica por cima
+  const de=pino.position.clone(), para=posFuro(furo);
+  await tween(.32,t=>{ const s=suave(t); pino.position.x=de.x+(para.x-de.x)*s; pino.position.z=de.z+(para.z-de.z)*s; pino.position.y=.5+Math.sin(t*Math.PI)*.6; });
+  await tween(.12,t=>{ pino.position.y=.5*(1-t); });
+  c.p[e]=furo; F.mov++; Som.solta(); vibrar(12);
+  const n=atualizaNos(); ocupado=false;
+  if(n===0) return vitoria();
+  if(F.mov>=F.limite) return derrota();
+}
+function desfazer(){
+  if(ocupado||!historico.length){ toast('Nada para voltar'); return; }
+  const h=historico.pop(); F.cordas.forEach((c,i)=>{ c.p=h.p[i]; c.camada=h.cam[i]; c.pinos.forEach((pi,e)=>{ pi.position.copy(posFuro(c.p[e])); }); }); F.mov=h.mov;
+  selecionar(null); atualizaNos(false); Som.tom(500,.12,'sine',.06,0,300);
+}
+function dica(){
+  if(ocupado) return;
+  if(dicaGratis<=0){ if(S.moedas<PRECO.dica){ toast('Moedas insuficientes'); Som.erro(); return; } S.moedas-=PRECO.dica; salvar(); } else dicaGratis--;
+  const oc=ocupados(), livres=[...Array(F.H).keys()].filter(k=>!oc.has(k)); let best=null, bn=Infinity;
+  F.cordas.forEach((c,ci)=>{ if(c.cortada) return; [0,1].forEach(e=>livres.forEach(h=>{ const old=c.p[e]; c.p[e]=h; const n=contaNos(F.cordas,posLogica).n; c.p[e]=old; if(n<bn){ bn=n; best={ci,e,h}; } })); });
+  if(!best) return; const pino=F.cordas[best.ci].pinos[best.e], furo=furos[best.h];
+  let k=0; const pisca=setInterval(()=>{ k++; furo.material.emissive.setHex(k%2?0xffd93b:0); pino.children[0].material.emissive=new THREE.Color(k%2?0x555500:0); if(k>7){ clearInterval(pisca); pino.children[0].material.emissive=new THREE.Color(0); furo.material.emissive.setHex(0); } },220);
+  toast('💡 Mova a ponta piscando para o furo amarelo'); hud(nosAntes);
+}
+async function cortar(ci){
+  const c=F.cordas[ci]; if(c.cortada) return;
+  S.moedas-=PRECO.corte; salvar(); modoCorte=false; $('b-corte').classList.remove('ativo');
+  Som.corte(); vibrar([30,20,30]); c.cortada=true;
+  const tubo=c.tubo; await tween(.4,t=>{ tubo.scale.setScalar(1-t*.9); tubo.position.y=t*2; c.pinos.forEach(p=>p.scale.setScalar(1-t)); });
+  grupo.remove(tubo); c.pinos.forEach(p=>grupo.remove(p)); pinos=pinos.filter(p=>p.userData.corda!==ci);
+  F.cordas.forEach((x,i)=>refazTubo(i)); const n=atualizaNos(); if(n===0) vitoria();
+}
+
+// ---------- Fim de fase ----------
+function estrelas(){ return F.mov<=F.par?3 : F.mov<=F.par+3?2 : 1; }
+async function vitoria(){
+  ocupado=true; Som.vitoria(); vibrar([30,40,30,40,80]); grito('Desenrolou!');
+  F.cordas.forEach(c=>{ if(!c.cortada){ c.tubo.material.color.set('#ffd93b').convertSRGBToLinear(); c.tubo.material.emissive.set('#664400'); } }); festa();
+  const e=estrelas(), n=F.n, ant=S.est[n]||0; if(e>ant) S.est[n]=e;
+  const ganho=10+5*Math.max(0,e-ant)+(e===3?5:0); S.moedas+=ganho; if(n>=S.desbloq) S.desbloq=Math.min(TOTAL,n+1); salvar();
+  await new Promise(r=>setTimeout(r,1300));
+  modal(`<h2>Fase ${n} completa!</h2><div class="estrelas">${[0,1,2].map(k=>`<span>★</span>`).join('')}</div>
+    <p>${F.mov} movimentos · ideal ${F.par}</p><span class="moedas">+${ganho} 🪙</span>
+    ${n<TOTAL?'<button class="btn verde" id="m-prox">Próxima fase ›</button>':''}<button class="btn" id="m-rep">Jogar de novo</button><button class="btn sec" id="m-fases">Fases</button>`);
+  document.querySelectorAll('.estrelas span').forEach((s,k)=>setTimeout(()=>{ s.classList.add(k<e?'on':'vz'); if(k<e) Som.tom(700+k*200,.15,'triangle',.08); },300+k*300));
+  if($('m-prox')) $('m-prox').onclick=()=>iniciar(n+1); $('m-rep').onclick=()=>iniciar(n); $('m-fases').onclick=telaFases;
+  setTimeout(()=>Som.moeda(),1300);
+}
+function derrota(){
+  ocupado=true; Som.erro(); vibrar(80);
+  modal(`<h2>Acabaram os movimentos</h2><p>Ainda tem <b>${nosAntes}</b> nó(s).</p>
+    <button class="btn verde" id="m-mais">+5 movimentos · 🪙 ${PRECO.mais}</button><button class="btn" id="m-rep">Tentar de novo</button><button class="btn sec" id="m-fases">Fases</button>`);
+  $('m-mais').style.opacity=S.moedas>=PRECO.mais?1:.5;
+  $('m-mais').onclick=()=>{ if(S.moedas<PRECO.mais){ toast('Moedas insuficientes'); return; } S.moedas-=PRECO.mais; F.limite+=5; salvar(); fechar(); ocupado=false; hud(nosAntes); };
+  $('m-rep').onclick=()=>iniciar(F.n); $('m-fases').onclick=telaFases;
+}
+
+// ---------- Interface ----------
+const ray=new THREE.Raycaster(), ptr=new THREE.Vector2();
+$('cena').addEventListener('pointerdown',e=>{
+  Som.init(); if(!F||ocupado||!$('modal').hidden) return;
+  ptr.x=e.clientX/innerWidth*2-1; ptr.y=-(e.clientY/innerHeight)*2+1; ray.setFromCamera(ptr,cam);
+  const hits=ray.intersectObjects(grupo.children,true);
+  const hp=hits.find(h=>h.object.userData.corda!==undefined && !F.cordas[h.object.userData.corda].cortada);
+  const ht=hits.find(h=>tubos.includes(h.object));
+  if(modoCorte){ const ci = hp ? hp.object.userData.corda : ht ? F.cordas.findIndex(c=>c.tubo===ht.object) : -1; if(ci>=0) cortar(ci); return; }
+  if(hp){ const pino=pinos.find(p=>p.userData===hp.object.userData); selecionar(selecionado===pino?null:pino); return; }
+  const hf=hits.find(h=>h.object.userData.furo!==undefined);
+  if(hf && selecionado){ const k=hf.object.userData.furo; if(ocupados().has(k)){ Som.erro(); return; } moverPara(selecionado,k); return; }
+  if(selecionado) selecionar(null);
+});
+function hud(n){
+  $('h-fase').textContent='Fase '+F.n; $('h-moe').textContent='🪙 '+fmt(S.moedas); $('h-som').textContent=S.som?'🔊':'🔇';
+  $('h-nos').textContent= n===0 ? '✅ Sem nós' : `🪢 ${n} nó${n>1?'s':''}`; $('h-nos').classList.toggle('zero',n===0);
+  $('h-mov').textContent=`👆 ${F.mov}/${F.limite}`; const e=estrelas(); $('h-est').textContent='⭐'.repeat(e)+'☆'.repeat(3-e);
+  $('dica-preco').textContent= dicaGratis>0 ? 'grátis' : '🪙 '+PRECO.dica;
+  $('b-corte').style.opacity=S.moedas>=PRECO.corte?1:.5;
+  $('h-sub').textContent = F.n<=2 ? 'Toque numa ponta e depois num furo livre' : 'Desfaça todos os nós';
+}
+let toastT; function toast(t){ const e=$('toast'); e.textContent=t; e.classList.add('on'); clearTimeout(toastT); toastT=setTimeout(()=>e.classList.remove('on'),2000); }
+function grito(t){ const g=document.createElement('div'); g.className='grito'; g.textContent=t; document.body.appendChild(g); setTimeout(()=>g.remove(),1300); }
+function modal(h){ $('mbox').innerHTML=h; $('modal').hidden=false; }
+function fechar(){ $('modal').hidden=true; }
+function iniciar(n){ fechar(); F=gerar(n); F.mov=0; historico=[]; dicaGratis=1; selecionado=null; ocupado=false; modoCorte=false; $('b-corte').classList.remove('ativo'); montar(); nosAntes=atualizaNos(false); if(!S.viu){ S.viu=true; salvar(); regras(); } }
+function telaFases(){
+  modal(`<h2>Fases</h2><p>⭐ ${Object.values(S.est).reduce((a,b)=>a+b,0)} estrelas · 🪙 ${fmt(S.moedas)}</p><div class="fases">${Array.from({length:TOTAL},(_,i)=>{ const n=i+1, b=n>S.desbloq, e=S.est[n]||0;
+    return `<button class="fz ${b?'bloq':''} ${n===S.desbloq?'atual':''}" data-n="${n}">${b?'🔒':n}<small>${b?'':'★'.repeat(e)}</small></button>`; }).join('')}</div>
+    <button class="btn sec" id="m-reg">Como jogar</button>`);
+  $('mbox').querySelectorAll('.fz').forEach(b=>b.onclick=()=>{ const n=+b.dataset.n; if(n<=S.desbloq) iniciar(n); });
+  $('m-reg').onclick=regras;
+}
+function regras(){
+  modal(`<h2>Como jogar</h2><ul class="regras"><li>Toque na <b>ponta</b> de uma corda (o pino colorido) e depois num <b>furo livre</b> (fica verde).</li>
+    <li>A corda que você mexe passa <b>por cima</b> das outras.</li><li>Quando nenhuma corda cruza outra, ela <b>desenrola</b> e a fase acaba.</li>
+    <li>Menos movimentos = mais estrelas. 💡 Dica, ✂️ Cortar e +5 movimentos custam moedas.</li></ul><button class="btn verde" id="m-ok">Entendi!</button>`);
+  $('m-ok').onclick=fechar;
+}
+$('b-desf').onclick=desfazer; $('b-dica').onclick=dica; $('b-rein').onclick=()=>iniciar(F.n);
+$('b-corte').onclick=()=>{ if(ocupado) return; if(modoCorte){ modoCorte=false; $('b-corte').classList.remove('ativo'); return; }
+  if(S.moedas<PRECO.corte){ toast('Moedas insuficientes'); Som.erro(); return; } modoCorte=true; $('b-corte').classList.add('ativo'); toast('✂️ Toque na corda que quer cortar'); };
+$('h-fases').onclick=telaFases; $('h-som').onclick=()=>{ S.som=!S.som; salvar(); hud(nosAntes); };
+$('rodape').textContent=`${CONFIG.SISTEMA} v${CONFIG.VERSAO}•Desenvolvido por ${CONFIG.DESENVOLVEDOR}`;
+
+// ---------- Loop ----------
+let ult=performance.now(), acTubo=0;
+function quadro(t){
+  const dt=Math.min(.05,(t-ult)/1000); ult=t; tempo+=dt; acTubo+=dt;
+  passoTweens(dt); passoConfete(dt);
+  if(F){
+    if(acTubo>1/30){ acTubo=0; F.cordas.forEach((c,ci)=>refazTubo(ci)); }
+    const pul=.35+Math.abs(Math.sin(tempo*4))*.5;
+    F.cordas.forEach(c=>{ if(c.cortada||!c.tubo) return; if(nosAntes>0) c.tubo.material.emissive.setRGB(c.emNo?pul*.45:0, c.emNo?0:.05, 0); });
+    if(selecionado) selecionado.rotation.y+=dt*4;
+  }
+  brilho.position.x=Math.sin(tempo*.5)*6;
+  renderer.render(cena,cam); requestAnimationFrame(quadro);
+}
+ajusta(); iniciar(Math.min(S.desbloq,TOTAL)); requestAnimationFrame(quadro);
+</script>
+</body>
+</html>
