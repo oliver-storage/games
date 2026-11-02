@@ -2,64 +2,27 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="theme-color" content="#ff7ec0">
-<title>Febre Doces</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Jogos</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="app">
-
-  <!-- MAPA -->
-  <section class="tela on" id="t-mapa">
-    <header class="barra">
-      <span class="logo">Febre Doces</span>
-      <span class="chip" id="h-nivel">Nv 1</span>
-      <span class="chip" id="h-est">⭐ 0</span>
-      <span class="chip" id="h-moe">🪙 0</span>
-      <button class="chip som" id="h-som">🔊</button>
-    </header>
-    <div id="mapa"></div>
-    <nav class="navb">
-      <button id="n-bau">🎁<small>Baú do dia</small><span class="dot" id="bau-dot" hidden></span></button>
-      <button id="n-dia">📅<small>Desafio do dia</small><span class="dot" id="dia-dot" hidden></span></button>
-      <button id="n-conq">🏆<small>Conquistas</small></button>
-    </nav>
-    <footer id="rodape"></footer>
-  </section>
-
-  <!-- JOGO -->
-  <section class="tela" id="t-jogo">
-    <header class="hudj">
-      <button class="sair" id="j-sair">✕</button>
-      <div class="obj" id="j-obj"></div>
-      <div class="jogb" id="j-jogb"><b id="j-jog">0</b><small>jogadas</small></div>
-    </header>
-    <div class="placar">
-      <b id="j-pts">0</b>
-      <div class="bar"><i id="j-bar"></i><span class="st" id="st1">★</span><span class="st" id="st2">★</span><span class="st" id="st3">★</span></div>
-    </div>
-    <div class="tab" id="tab"><div id="fundo"></div><div id="doces"></div><div id="fx"></div></div>
-    <div class="boost">
-      <button id="bo-mar">🔨<small>🪙 30</small></button>
-      <button id="bo-mis">🔀<small>🪙 20</small></button>
-      <button id="bo-mais">+5<small>🪙 40</small></button>
+  <section class="tela on">
+    <h1>JO<span>GOS</span></h1>
+    <p class="sub">Partidas rápidas. Desafie um amigo pelo WhatsApp e joguem juntos.</p>
+    <div class="cards">
+      <a class="card" href="oliveira/index.html"><div class="ic">👨‍👩‍👧</div><div><b>Família Oliveira</b><small>Aventura: Seu Tonho, Bia e Vó Lurdes unem seus poderes para sair do videogame.</small></div></a>
+      <a class="card" href="febre/index.html"><div class="ic">🍬</div><div><b>Febre Doces</b><small>Campanha com 40 fases de estourar docinhos, especiais e conquistas.</small></div></a>
+      <a class="card" href="corre.html"><div class="ic">🦎</div><div><b>Calu Corre</b><small>Pule cactos com o Calu pelo sertão e pegue castanhas.</small></div></a>
+      <a class="card" href="nave.html"><div class="ic">🚀</div><div><b>Chuva de Meteoros</b><small>Arcade: 60 segundos de meteoros e um chefão no final.</small></div></a>
+      <a class="card" href="blocos.html"><div class="ic">🧩</div><div><b>Estoura Blocos</b><small>Versão rápida: estoure grupos de blocos iguais em 30 jogadas.</small></div></a>
+      <a class="card" href="dupla.html"><div class="ic">➕</div><div><b>Dupla</b><small>Some dois números e bata o alvo em 60 segundos.</small></div></a>
     </div>
   </section>
-
-  <!-- CONQUISTAS -->
-  <section class="tela" id="t-conq">
-    <header class="barra"><button class="chip" id="c-volta">‹ Mapa</button><span class="logo">Conquistas</span><span class="chip" id="c-qtd">0/0</span></header>
-    <div class="lista" id="c-lista"></div>
-  </section>
-
 </div>
-<div class="modal" id="modal" hidden><div class="mbox" id="mbox"></div></div>
-<div id="toast"></div>
-<script src="logica.js"></script>
-<script src="doces.js"></script>
-<script src="jogo.js"></script>
+<footer id="rodape"></footer>
+<script src="core.js"></script>
+<script>$('rodape').textContent = `Jogos v${CONFIG.VERSAO}•Desenvolvido por ${CONFIG.DESENVOLVEDOR}`;</script>
 </body>
 </html>

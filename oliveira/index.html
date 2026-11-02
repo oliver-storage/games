@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#1b1046">
+<title>Família Oliveira</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html,body{height:100%;overscroll-behavior:none}
+body{background:#120a30;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;user-select:none;-webkit-user-select:none;overflow:hidden}
+button{font-family:inherit;color:inherit;border:0;cursor:pointer}
+.app{height:100dvh;max-width:900px;margin:0 auto;position:relative}
+.tela{display:none;flex-direction:column;height:100%}
+.tela.on{display:flex}
+/* início */
+#t-inicio{padding:18px;gap:14px;overflow-y:auto;background:radial-gradient(circle at 50% 0,#3a1c71,#120a30 70%)}
+.topo{display:flex;justify-content:space-between;align-items:center}
+.topo a,.topo button{background:rgba(255,255,255,.1);border-radius:12px;padding:6px 12px;font-size:15px;color:#fff;text-decoration:none}
+h1{font-size:40px;line-height:1;text-align:center;letter-spacing:1px;margin-top:8px;text-shadow:0 4px 0 #6a2fd0}
+h1 span{color:#3ddc84}
+.hist{background:rgba(255,255,255,.07);border-radius:16px;padding:14px;line-height:1.45;font-size:15px;color:#d8d0f0}
+#elenco{display:flex;flex-direction:column;gap:10px}
+.ator{display:flex;gap:12px;align-items:center;background:rgba(255,255,255,.07);border-radius:16px;padding:8px 12px}
+.ator canvas{width:60px;height:60px;background:#2a1760;border-radius:12px;flex-shrink:0}
+.ator b{display:block;font-size:17px}
+.ator small{color:#c9bff0;font-size:13px;line-height:1.3}
+.btn{display:block;width:100%;padding:15px;border-radius:16px;font-size:18px;font-weight:800;background:#7c3aed;box-shadow:0 5px 0 #4c1d95;margin-top:8px;text-align:center}
+.btn:active{transform:translateY(3px);box-shadow:0 2px 0 #4c1d95}
+.btn.verde{background:#22b04a;box-shadow:0 5px 0 #15803d}
+.btn.zap{background:#16a34a;box-shadow:0 5px 0 #0f6b30}
+.btn.sec{background:#2e2257;box-shadow:0 5px 0 #1a1238}
+footer{text-align:center;font-size:11px;opacity:.6;padding:6px}
+/* fases */
+#t-fases{padding:16px;gap:10px;background:#1b1046;overflow-y:auto}
+#lista{display:flex;flex-direction:column;gap:10px}
+.fase{display:flex;align-items:center;gap:12px;background:#2e2257;border-radius:16px;padding:12px;text-align:left;box-shadow:0 4px 0 #1a1238}
+.fase.bloq{opacity:.5}
+.fase .num{width:46px;height:46px;border-radius:12px;background:#7c3aed;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;flex-shrink:0}
+.fase .info{flex:1}.fase b{display:block;font-size:17px}.fase small{color:#b9aee0}
+.fase .est{color:#ffd93b;font-size:20px;letter-spacing:-1px}.fase .est i{color:#4a3d80;font-style:normal}
+/* jogo */
+#t-jogo{background:#120a30}
+.hud{display:flex;align-items:center;gap:6px;padding:6px 8px}
+#pers{display:flex;gap:6px;flex:1}
+.pc{display:flex;align-items:center;gap:4px;background:#2e2257;border-radius:12px;padding:3px 8px 3px 3px;border:2px solid transparent;position:relative}
+.pc.on{border-color:#3ddc84;background:#3b2a73}
+.pc canvas{width:34px;height:34px;background:#1b1046;border-radius:9px}
+.pc .nm{font-size:12px;font-weight:700}
+.pc .hp{position:absolute;bottom:-2px;left:38px;font-size:10px;color:#ff4d6a}.pc .hp i{color:#4a3d80;font-style:normal}
+.pc.ok::after{content:'✓';position:absolute;top:-6px;right:-4px;background:#3ddc84;color:#0b3;border-radius:50%;width:16px;height:16px;font-size:11px;display:flex;align-items:center;justify-content:center;color:#063}
+.pc .nm{margin-bottom:8px}
+.info2{display:flex;gap:8px;font-size:13px;font-weight:700;white-space:nowrap}
+.mini{background:#2e2257;border-radius:10px;padding:6px 10px;font-size:16px}
+.palco{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;position:relative}
+#tela{width:min(100%, calc((100dvh - 160px) * 1.6));aspect-ratio:16/10;image-rendering:pixelated;border-radius:10px;display:block;touch-action:none}
+#aviso{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.65);padding:6px 14px;border-radius:14px;font-weight:700;font-size:14px;opacity:0;transition:.3s;pointer-events:none;white-space:nowrap}
+#aviso.on{opacity:1}
+.ctrl{display:flex;justify-content:space-between;align-items:center;padding:8px 10px calc(10px + env(safe-area-inset-bottom));gap:10px;touch-action:none}
+.ctrl .g{display:flex;gap:10px}
+.ctrl button{width:66px;height:62px;border-radius:18px;background:#2e2257;font-size:26px;font-weight:900;box-shadow:0 4px 0 #1a1238;touch-action:none;line-height:1}
+.ctrl button small{display:block;font-size:10px;font-weight:700;margin-top:2px}
+.ctrl button.on{background:#7c3aed;transform:translateY(3px);box-shadow:0 1px 0 #1a1238}
+#c-pulo{background:#22b04a;box-shadow:0 4px 0 #15803d}
+#c-acao{background:#d97706;box-shadow:0 4px 0 #92400e}
+#c-troca{width:52px;font-size:22px}
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(10,5,30,.7);display:flex;align-items:center;justify-content:center;padding:16px;z-index:20}
+.mbox{background:#241a4d;border:2px solid #4c3a99;border-radius:22px;padding:20px 16px 16px;width:100%;max-width:380px;text-align:center;max-height:94dvh;overflow-y:auto}
+.mbox h2{font-size:26px;color:#3ddc84}
+.mbox p{margin-top:6px;line-height:1.4}
+.sub{color:#b9aee0;font-size:14px}
+.caixa{background:rgba(255,255,255,.08);border-radius:14px;padding:10px 12px;margin-top:10px;font-size:14px;line-height:1.45;text-align:left}
+.estrelas{font-size:46px;letter-spacing:4px;color:#3d3170;margin:4px 0}
+.estrelas .on{color:#ffd93b;text-shadow:0 3px 0 #b8860b}
+@media (max-width:460px){ .pc .nm{display:none} .pc{padding:3px} .pc .hp{left:4px;bottom:-4px} .info2{font-size:12px;gap:6px} }
+@media (orientation:landscape) and (max-height:520px){
+  #t-jogo{flex-direction:row;flex-wrap:wrap}
+  .hud{width:100%;padding:4px 8px}
+  .palco{order:2;flex:1}
+  #tela{width:min(100%, calc((100dvh - 50px) * 1.6))}
+  .ctrl{display:contents}
+  .ctrl .g{flex-direction:column;justify-content:center;padding:6px;order:1}
+  .ctrl .g:last-child{order:3}
+  .ctrl button{width:58px;height:54px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <section class="tela on" id="t-inicio">
+    <div class="topo"><a href="../index.html">‹ Jogos</a><button id="b-som">🔊</button></div>
+    <h1>FAMÍLIA<br><span>OLIVEIRA</span></h1>
+    <p class="hist">📺 A TV velha da casa dos Oliveira deu um estalo e puxou a família inteira para dentro de um videogame! Para voltar para casa, eles precisam achar a <b>SAÍDA</b> de cada fase. Sozinho ninguém passa: <b>cada um tem um poder</b> e só juntos eles conseguem.</p>
+    <div id="elenco"></div>
+    <button class="btn verde" id="b-jogar">Jogar</button>
+    <footer id="rodape"></footer>
+  </section>
+
+  <section class="tela" id="t-fases">
+    <div class="topo"><button id="b-volta">‹ Início</button><b>Fases</b><span></span></div>
+    <div id="lista"></div>
+  </section>
+
+  <section class="tela" id="t-jogo">
+    <div class="hud">
+      <div id="pers"></div>
+      <div class="info2"><span id="h-est">⭐ 0/3</span><span id="h-saida">🚪 0/3</span><span id="h-tempo">⏱ 0:00</span></div>
+      <button class="mini" id="j-pausa">⏸</button>
+    </div>
+    <div class="palco"><canvas id="tela"></canvas><div id="aviso"></div></div>
+    <div class="ctrl">
+      <div class="g"><button id="c-esq">◀</button><button id="c-dir">▶</button></div>
+      <div class="g"><button id="c-troca">🔄</button><button id="c-acao">💪<small>Poder</small></button><button id="c-pulo">⤒<small>Pular</small></button></div>
+    </div>
+  </section>
+
+</div>
+<div class="modal" id="modal" hidden><div class="mbox" id="mbox"></div></div>
+<script src="fases.js"></script>
+<script src="jogo.js"></script>
+</body>
+</html>
