@@ -1,20 +1,20 @@
 // Família Oliveira — plataforma e quebra-cabeça em 2D
-const CONFIG = { SISTEMA:'Família Oliveira', VERSAO:'0.3.0.0', DESENVOLVEDOR:'Vettore Sistemas' };
+const CONFIG = { SISTEMA:'Família Oliveira', VERSAO:'0.4.0.0', DESENVOLVEDOR:'Vettore Sistemas' };
 const $ = id => document.getElementById(id);
 const VW = 480, VH = 300, DT = 1/60, G = 1400;
 const fmtT = s => { s=Math.floor(s); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); };
 const limpa = s => ((s||'').toString().replace(/[<>&"']/g,'').slice(0,16)) || 'Amigo';
 
 const PERS = [
-  { id:'carlito', nome:'Carlito Junior', curto:'Carlito', vel:170, pulo:-500, h:44, ic:'💪', poder:'Ombrada: derruba parede rachada e robôs' },
-  { id:'kelly',   nome:'Kelly',          curto:'Kelly',   vel:150, pulo:-545, h:40, ic:'🎯', poder:'Estilingue: acerta robôs e alavancas' },
-  { id:'mirtes',  nome:'Tia Mirtes',     curto:'Mirtes',  vel:105, pulo:-370, h:36, ic:'☂️', poder:'Guarda-chuva: bloqueia laser, plana, sobe no vento e vira degrau' },
-  { id:'giu',     nome:'Giuseppe',       curto:'Giuseppe',vel:160, pulo:-520, h:38, ic:'🐍', poder:'Magrinho: rasteja por vãos estreitos e aperta botões' },
+  { id:'william', nome:'William', curto:'William', vel:165, pulo:-500, h:44, ic:'💪', poder:'Força: Ombrada que derruba parede rachada e robôs' },
+  { id:'kelly',   nome:'Kelly',   curto:'Kelly',   vel:140, pulo:-545, h:40, ic:'🛡️', poder:'Proteção: o quadro-negro bloqueia laser; erguido, vira degrau, plana e sobe no vento' },
+  { id:'junior',  nome:'Junior',  curto:'Junior',  vel:160, pulo:-530, h:42, ic:'🤏', poder:'Encolher: fica pequeno para passar por vãos e apertar botões' },
 ];
+const KE=1, JU=2;
 const H_AGACH = 20;
 
 // ---------- Save ----------
-const SK='familia_oliveira_v2';
+const SK='familia_oliveira_v3';
 let S; try{ S=Object.assign({desbloq:1,est:{},tempo:{},som:true,nome:'',viuAbertura:false}, JSON.parse(localStorage.getItem(SK)||'{}')); }catch(e){ S={desbloq:1,est:{},tempo:{},som:true,nome:'',viuAbertura:false}; }
 const salvar = () => { try{ localStorage.setItem(SK, JSON.stringify(S)); }catch(e){} };
 
@@ -42,7 +42,7 @@ function carregar(n){
   const ps=[], robos=[];
   for(let y=0;y<10;y++) for(let x=0;x<W;x++){
     const c=mapa[y][x];
-    if('1234'.includes(c)){ const i=+c-1; ps[i]=novoPers(i, x*T+6, (y+1)*T); mapa[y][x]='.'; }
+    if('123'.includes(c)){ const i=+c-1; ps[i]=novoPers(i, x*T+6, (y+1)*T); mapa[y][x]='.'; }
     if(c==='R'){ robos.push({ x:x*T+4, y:y*T+6, w:22, h:24, vx:40, vy:0, dir:-1, hp:2, cd:1.5, morto:false, pisca:0, mira:false }); mapa[y][x]='.'; }
   }
   let saida={x:0,y:0}; for(let y=0;y<10;y++) for(let x=0;x<W;x++) if(mapa[y][x]==='S') saida={x,y};
@@ -78,7 +78,7 @@ addEventListener('keydown',e=>{
   if(k){ if(k==='pulo'&&!K.pulo) K.puloN=true; K[k]=true; e.preventDefault(); }
   if(e.code==='KeyX'||e.code==='KeyJ'||e.code==='KeyE'){ K.acaoN=true; e.preventDefault(); }
   if(e.code==='Tab'||e.code==='KeyQ'){ K.trocaN=true; e.preventDefault(); }
-  if(/^Digit[1-4]$/.test(e.code)) selecionar(+e.code.slice(-1)-1);
+  if(/^Digit[1-3]$/.test(e.code)) selecionar(+e.code.slice(-1)-1);
   if(e.code==='KeyR') reiniciar(); });
 addEventListener('keyup',e=>{ const k=TECLAS[e.code]; if(k) K[k]=false; });
 function botao(id, ao, solto){
@@ -98,8 +98,8 @@ function selecionar(i){ if(!F||F.fim||F.ativo===i) return; F.ativo=i; Som.troca(
 function atualizar(dt){
   if(F.fim){ partes(dt); return; }
   F.t+=dt;
-  if(K.trocaN) selecionar((F.ativo+1)%4);
-  const A=F.ps[F.ativo], mi=F.ps[2];
+  if(K.trocaN) selecionar((F.ativo+1)%3);
+  const A=F.ps[F.ativo], mi=F.ps[KE];
   for(const p of F.ps){
     const ativo=p===A;
     if(p.inv>0) p.inv-=dt; if(p.cd>0) p.cd-=dt;
@@ -111,7 +111,7 @@ function atualizar(dt){
     if(ativo && K.puloN && p.coyote>0 && !p.agach){ p.vy=p.pulo; p.coyote=0; Som.pulo(); }
     if(ativo && K.acaoN) poder(p);
     p.vy+=G*dt;
-    if(p.id==='mirtes' && p.guarda){ if(p.vy>55) p.vy=55; if(noVento(p)){ p.vy-=2900*dt; if(p.vy<-170) p.vy=-170; } }
+    if(p.id==='kelly' && p.guarda){ if(p.vy>55) p.vy=55; if(noVento(p)){ p.vy-=2900*dt; if(p.vy<-170) p.vy=-170; } }
     if(p.vy>650) p.vy=650;
     const bateu=moverX(p,p.vx*dt);
     if(p.dash>0){ quebrar(p); if(bateu) p.dash=0; }
@@ -132,13 +132,12 @@ function atualizar(dt){
 function noVento(p){ const cx=Math.floor((p.x+p.w/2)/T), y0=Math.floor((p.y+p.h)/T);
   for(let y=y0;y<=Math.min(9,y0+9);y++){ const c=tile(cx,y); if(c==='F') return true; if(solido(cx,y)) return false; } return false; }
 function poder(p){
-  if(p.id==='carlito'){ if(p.cd>0) return; p.dash=.24; p.cd=.6; Som.tom(180,.15,'sawtooth',.06,0,90); }
-  if(p.id==='kelly'){ if(p.cd>0) return; p.cd=.4; F.tiros.push({ x:p.x+p.w/2+p.dir*10, y:p.y+22, vx:p.dir*380, vida:1.4 }); Som.tiro(); }
-  if(p.id==='mirtes'){ p.guarda=!p.guarda; Som.tom(p.guarda?500:350,.08,'triangle',.06); }
-  if(p.id==='giu'){
-    if(!p.agach){ p.y+=p.h-H_AGACH; p.h=H_AGACH; p.agach=true; Som.tom(300,.08,'triangle',.05); }
-    else if(cabe(p, PERS[3].h)){ p.y-=PERS[3].h-p.h; p.h=PERS[3].h; p.agach=false; Som.tom(450,.08,'triangle',.05); }
-    else aviso('Sem espaço para levantar aqui');
+  if(p.id==='william'){ if(p.cd>0) return; p.dash=.24; p.cd=.6; Som.tom(180,.15,'sawtooth',.06,0,90); }
+  if(p.id==='kelly'){ p.guarda=!p.guarda; Som.tom(p.guarda?500:350,.08,'triangle',.06); }
+  if(p.id==='junior'){
+    if(!p.agach){ p.y+=p.h-H_AGACH; p.h=H_AGACH; p.agach=true; Som.tom(900,.15,'sine',.06,0,300); }
+    else if(cabe(p, PERS[JU].h)){ p.y-=PERS[JU].h-p.h; p.h=PERS[JU].h; p.agach=false; Som.tom(300,.15,'sine',.06,0,900); }
+    else aviso('Sem espaço para crescer aqui');
   }
 }
 function quebrar(p){
@@ -151,6 +150,7 @@ function coletar(p){
   for(let y=y1;y<=y2;y++) for(let x=x1;x<=x2;x++){
     const c=tile(x,y);
     if(c==='*'){ F.mapa[y][x]='.'; F.est++; Som.estrela(); estilhaço(x*T+15,y*T+15,'#ffd93b',10); hudTopo(); }
+    if(c==='C' && !F.aberto){ F.aberto=true; Som.clique(); vibrar(30); estilhaço(x*T+15,y*T+25,'#46a8ff',8); aviso('Clique! Algo se abriu'); }
     if(c==='B' && !F.porta){ F.porta=true; Som.clique(); vibrar(30); estilhaço(x*T+15,y*T+25,'#ff4d4d',8); aviso('Clique! A porta abriu'); }
   }
 }
@@ -178,12 +178,11 @@ function matarRobo(r){ r.morto=true; estilhaço(r.x+11,r.y+12,'#9aa4b8',16); Som
 function projeteis(dt){
   for(const s of F.tiros){
     s.x+=s.vx*dt; s.vida-=dt; const tx=Math.floor(s.x/T), ty=Math.floor(s.y/T);
-    if(tile(tx,ty)==='A' && !F.aberto){ F.aberto=true; s.vida=0; Som.clique(); vibrar(30); estilhaço(tx*T+15,ty*T+15,'#ffd93b',8); aviso('Clique! Algo se abriu'); continue; }
     if(solido(tx,ty)){ s.vida=0; estilhaço(s.x,s.y,'#bbb',4); continue; }
     for(const r of F.robos) if(!r.morto && s.x>r.x&&s.x<r.x+r.w&&s.y>r.y&&s.y<r.y+r.h){ s.vida=0; r.hp--; r.pisca=.2; Som.tom(300,.06,'square',.06); if(r.hp<=0) matarRobo(r); break; }
   }
   F.tiros=F.tiros.filter(s=>s.vida>0);
-  const mi=F.ps[2];
+  const mi=F.ps[KE];
   for(const l of F.lasers){
     l.x+=l.vx*dt; if(solidoPx(l.x,l.y)){ l.morto=true; continue; }
     for(const p of F.ps) if(l.x>p.x-2 && l.x<p.x+p.w+2 && l.y>p.y && l.y<p.y+p.h){
@@ -233,6 +232,8 @@ function desenhaTile(t,x,y,tx,ty){
     if(!F.porta){ c.fillStyle='rgba(255,255,255,.8)'; c.font='bold 9px system-ui'; c.textAlign='center'; c.fillText('▼',x+15,y+T-16+Math.sin(F.t*6)*2); } return; }
   if(t==='b'){ if(F.aberto){ c.fillStyle='#c98a4a'; c.fillRect(x,y,T,12); c.fillStyle='#8f5a2a'; c.fillRect(x+T/2-1,y,2,12); c.fillRect(x,y+10,T,2); }
     else { c.strokeStyle='rgba(0,0,0,.25)'; c.setLineDash([4,4]); c.strokeRect(x+1,y+1,T-2,10); c.setLineDash([]); } return; }
+  if(t==='C'){ c.fillStyle='#555'; c.fillRect(x+6,y+T-6,18,6); c.fillStyle=F.aberto?'#2ecc71':'#2e86de'; c.fillRect(x+9,y+T-(F.aberto?8:12),12,F.aberto?2:6);
+    if(!F.aberto){ c.fillStyle='rgba(255,255,255,.85)'; c.font='bold 9px system-ui'; c.textAlign='center'; c.fillText('▼',x+15,y+T-16+Math.sin(F.t*6)*2); } return; }
   if(t==='A'){ c.fillStyle='#666'; c.fillRect(x+13,y+16,4,T*3); c.fillStyle='#444'; c.fillRect(x+6,y+18,18,8);
     c.strokeStyle='#ffd93b'; c.lineWidth=4; c.beginPath(); c.moveTo(x+15,y+20); c.lineTo(x+15+(F.aberto?10:-10),y+4); c.stroke(); c.fillStyle='#ff4d4d'; c.beginPath(); c.arc(x+15+(F.aberto?10:-10),y+4,4,0,7); c.fill(); return; }
   if(t==='^'){ c.fillStyle='#9fd8e6'; for(let k=0;k<3;k++){ c.beginPath(); c.moveTo(x+k*10,y+T); c.lineTo(x+k*10+5,y+8+(k%2)*6); c.lineTo(x+k*10+10,y+T); c.fill(); } c.fillStyle='rgba(255,255,255,.6)'; c.fillRect(x+4,y+18,2,8); return; }
@@ -260,7 +261,7 @@ function hudPers(){
 }
 function hudTopo(){ $('h-est').textContent=`⭐ ${F.est}/${F.totalEst}`; }
 let ultT=-1;
-function hudTempo(){ const s=Math.floor(F.t); if(s!==ultT){ ultT=s; $('h-tempo').textContent='⏱ '+fmtT(F.t); $('h-saida').textContent=`🚪 ${F.ps.filter(p=>p.saida).length}/4`; } }
+function hudTempo(){ const s=Math.floor(F.t); if(s!==ultT){ ultT=s; $('h-tempo').textContent='⏱ '+fmtT(F.t); $('h-saida').textContent=`🚪 ${F.ps.filter(p=>p.saida).length}/3`; } }
 $('pers').addEventListener('pointerdown',e=>{ const b=e.target.closest('.pc'); if(b){ e.preventDefault(); Som.init(); selecionar(+b.dataset.i); } });
 let avisoT; function aviso(txt){ const a=$('aviso'); a.textContent=txt; a.classList.add('on'); clearTimeout(avisoT); avisoT=setTimeout(()=>a.classList.remove('on'),2200); }
 
@@ -317,25 +318,25 @@ function desafiar(n,t){
 // Cada cena: lista de quadros { cen:'sala'|..., atores:[[id,x,dir,extra]], quem, txt, fx }
 const CENAS = {
   abertura: [
-    { cen:'salaNoite', atores:[['mirtes',150,1],['kelly',190,1],['giu',230,1],['carlito',300,-1]], quem:'giu', txt:'A TV tá chiando…', fx:'chuvisco' },
-    { cen:'salaNoite', atores:[['mirtes',150,1],['kelly',190,1],['giu',230,1],['carlito',300,-1]], quem:'mirtes', txt:'Dá um tapinha nela, Carlito!', fx:'chuvisco' },
-    { cen:'salaNoite', atores:[['mirtes',150,1],['kelly',190,1],['giu',230,1],['carlito',95,-1,'tapa']], quem:'carlito', txt:'Deixa comigo!', fx:'chuvisco' },
-    { cen:'salaNoite', atores:[['mirtes',150,1],['kelly',190,1],['giu',230,1],['carlito',95,-1]], quem:'kelly', txt:'Aaaah!', fx:'suga', dur:2.6 },
-    { cen:'tv', atores:[['carlito',140,1],['kelly',190,1],['mirtes',240,1],['giu',290,1]], quem:'giu', txt:'Estamos DENTRO do videogame!' },
-    { cen:'tv', atores:[['carlito',140,1],['kelly',190,1],['mirtes',240,1],['giu',290,1]], quem:'carlito', txt:'Bora achar a saída. Juntos!' },
+    { cen:'salaNoite', atores:[['kelly',170,1],['junior',220,1],['william',300,-1]], quem:'junior', txt:'A TV tá chiando…', fx:'chuvisco' },
+    { cen:'salaNoite', atores:[['kelly',170,1],['junior',220,1],['william',300,-1]], quem:'kelly', txt:'William, dá uma olhada nela.', fx:'chuvisco' },
+    { cen:'salaNoite', atores:[['kelly',170,1],['junior',220,1],['william',95,-1,'tapa']], quem:'william', txt:'É só mau contato…', fx:'chuvisco' },
+    { cen:'salaNoite', atores:[['kelly',170,1],['junior',220,1],['william',95,-1]], quem:'junior', txt:'Aaaah!', fx:'suga', dur:2.6 },
+    { cen:'tv', atores:[['william',170,1],['kelly',230,1],['junior',290,1]], quem:'william', txt:'Estamos DENTRO do videogame!' },
+    { cen:'tv', atores:[['william',170,1],['kelly',230,1],['junior',290,1]], quem:'kelly', txt:'Bora achar a saída. Juntos!' },
   ],
-  f1: [{ cen:'sala', atores:[['kelly',180,1],['giu',230,-1]], quem:'kelly', txt:'É a nossa sala… só que de videogame!' },
-       { cen:'sala', atores:[['kelly',180,1],['giu',230,-1]], quem:'giu', txt:'Eu passo por aquele vão. Sou magrinho!' }],
-  f2: [{ cen:'cozinha', atores:[['mirtes',170,1],['kelly',220,-1]], quem:'mirtes', txt:'Um buraco na minha cozinha?!' },
-       { cen:'cozinha', atores:[['mirtes',170,1],['kelly',220,-1,'mira']], quem:'kelly', txt:'Deixa que eu acerto a alavanca.' }],
-  f3: [{ cen:'quintal', atores:[['carlito',160,1],['mirtes',220,-1,'guarda']], quem:'mirtes', txt:'Muro alto? Sobe em mim, gente!' }],
-  f4: [{ cen:'garagem', atores:[['giu',150,1],['mirtes',210,1]], quem:'giu', txt:'Robôs na garagem!' },
-       { cen:'garagem', atores:[['giu',150,1],['mirtes',210,1]], quem:'mirtes', txt:'Fiquem atrás de mim.' }],
-  f5: [{ cen:'tv', atores:[['carlito',160,1],['kelly',210,1],['mirtes',260,1],['giu',310,1]], quem:'carlito', txt:'Lá está a saída de verdade!' }],
+  f1: [{ cen:'sala', atores:[['kelly',180,1],['junior',230,-1]], quem:'kelly', txt:'É a nossa sala… de videogame!' },
+       { cen:'sala', atores:[['kelly',180,1],['junior',230,-1]], quem:'junior', txt:'Eu encolho e passo naquele vão!' }],
+  f2: [{ cen:'cozinha', atores:[['junior',170,1],['kelly',230,-1]], quem:'junior', txt:'Um buraco na cozinha?!' },
+       { cen:'cozinha', atores:[['junior',170,1],['kelly',230,-1,'guarda']], quem:'kelly', txt:'Eu plano até o botão.' }],
+  f3: [{ cen:'quintal', atores:[['william',160,1],['kelly',220,-1,'guarda']], quem:'kelly', txt:'Muro alto? Sobe no meu quadro!' }],
+  f4: [{ cen:'garagem', atores:[['william',150,1],['kelly',210,1]], quem:'william', txt:'Robôs na garagem!' },
+       { cen:'garagem', atores:[['william',150,1],['kelly',210,1]], quem:'kelly', txt:'Fiquem atrás do meu escudo.' }],
+  f5: [{ cen:'tv', atores:[['william',180,1],['kelly',240,1],['junior',300,1]], quem:'william', txt:'Lá está a saída de verdade!' }],
   final: [
-    { cen:'salaDia', atores:[['mirtes',150,1],['kelly',190,1],['giu',230,1],['carlito',290,-1]], quem:'kelly', txt:'Voltamos pra casa!', fx:'flash' },
-    { cen:'salaDia', atores:[['mirtes',150,1],['kelly',190,1],['giu',230,1],['carlito',290,-1]], quem:'mirtes', txt:'Chega de TV. Quem quer café?' },
-    { cen:'salaDia', atores:[['mirtes',150,1],['kelly',190,1],['giu',230,-1],['carlito',290,-1]], quem:'giu', txt:'Só mais uma partida…?' },
+    { cen:'salaDia', atores:[['kelly',170,1],['junior',220,1],['william',290,-1]], quem:'kelly', txt:'Voltamos pra casa!', fx:'flash' },
+    { cen:'salaDia', atores:[['kelly',170,1],['junior',220,1],['william',290,-1]], quem:'william', txt:'Chega de TV por hoje.' },
+    { cen:'salaDia', atores:[['kelly',170,1],['junior',220,-1],['william',290,-1]], quem:'junior', txt:'Só mais uma partida…?' },
   ],
 };
 const CEN_DECO = {
@@ -440,7 +441,7 @@ $('b-volta').onclick=()=>mostrar('inicio');
 $('cena-pular').onclick=e=>{ e.stopPropagation(); pularCena(); };
 $('t-cena').addEventListener('pointerdown',e=>{ if(e.target.id==='cena-pular') return; Som.init(); avancarCena(); });
 $('j-pausa').onclick=()=>{ if(!F||F.fim) return; rodando=false;
-  modal(`<h2>Pausa</h2><p class="sub">Teclado: ←→ andar · espaço pular · X poder · Tab ou 1-4 trocar · R reiniciar</p>
+  modal(`<h2>Pausa</h2><p class="sub">Teclado: ←→ andar · espaço pular · X poder · Tab ou 1-3 trocar · R reiniciar</p>
     <button class="btn verde" id="m-cont">Continuar</button><button class="btn" id="m-rep">Reiniciar fase</button><button class="btn sec" id="m-menu">Fases</button>`);
   $('m-cont').onclick=()=>{ fecharModal(); rodando=true; ult=performance.now(); raf=requestAnimationFrame(quadro); };
   $('m-rep').onclick=()=>jogar(F.n); $('m-menu').onclick=telaFases; };

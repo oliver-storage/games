@@ -1,5 +1,5 @@
 // Núcleo compartilhado dos jogos — Vettore Sistemas
-const CONFIG = { VERSAO:'0.3.0.0', DESENVOLVEDOR:'Vettore Sistemas' };
+const CONFIG = { VERSAO:'0.4.0.0', DESENVOLVEDOR:'Vettore Sistemas' };
 
 const $ = id => document.getElementById(id);
 const fmt = n => Math.round(n).toLocaleString('pt-BR');
