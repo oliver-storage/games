@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#1b1046">
-<title>Família Oliveira</title>
+<title>Família em Ação</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 [hidden]{display:none!important}
@@ -65,6 +65,7 @@ footer{text-align:center;font-size:11px;opacity:.6;padding:6px}
 #c-pulo{background:#22b04a;box-shadow:0 4px 0 #15803d}
 #c-acao{background:#d97706;box-shadow:0 4px 0 #92400e}
 #c-troca{width:52px;font-size:22px}
+.sobre{text-align:center;font-weight:800;font-size:18px;color:#ffd93b;margin-top:-6px}
 /* montar família */
 #t-familia{padding:16px;gap:12px;overflow-y:auto;background:#1b1046}
 .campo{display:flex;flex-direction:column;gap:6px;font-size:13px;color:#c9bff0;font-weight:700}
@@ -112,7 +113,8 @@ footer{text-align:center;font-size:11px;opacity:.6;padding:6px}
 
   <section class="tela on" id="t-inicio">
     <div class="topo"><a href="../index.html">‹ Jogos</a><button id="b-som">🔊</button></div>
-    <h1>FAMÍLIA<br><span id="titulo-sob">OLIVEIRA</span></h1>
+    <h1>FAMÍLIA<br><span>EM AÇÃO</span></h1>
+    <p class="sobre" id="titulo-sob" hidden></p>
     <p class="hist">📺 A TV puxou a família para dentro do videogame. Só juntos eles saem!</p>
     <div id="elenco"></div>
     <button class="btn verde" id="b-jogar">Jogar</button>
@@ -123,7 +125,7 @@ footer{text-align:center;font-size:11px;opacity:.6;padding:6px}
 
   <section class="tela" id="t-familia">
     <div class="topo"><button id="f-volta">‹ Início</button><b>Monte sua família</b><span></span></div>
-    <label class="campo">Sobrenome da família<input id="f-sobrenome" maxlength="14" placeholder="Oliveira"></label>
+    <label class="campo">Sobrenome da família (opcional)<input id="f-sobrenome" maxlength="14" placeholder="Ex.: Silva"></label>
     <div id="f-membros"></div>
     <button class="btn verde" id="f-salvar">Salvar família</button>
   </section>

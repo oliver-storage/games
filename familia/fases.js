@@ -1,4 +1,4 @@
-// Fases da Família Oliveira — 10 linhas por mapa
+// Fases da Família em Ação — 10 linhas por mapa
 // # bloco · Q parede rachada · P portão e b ponte (abrem no botão azul C) · D porta (abre no botão vermelho B) · ^ cacos · F ventilador · * estrela · S saída · R robô · 1-3 personagens
 // deco: [tipo, coluna, linha-base]
 const FASES = [

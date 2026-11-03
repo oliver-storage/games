@@ -1,5 +1,5 @@
-// Família Oliveira — plataforma e quebra-cabeça em 2D
-const CONFIG = { SISTEMA:'Família Oliveira', VERSAO:'0.5.0.0', DESENVOLVEDOR:'Vettore Sistemas' };
+// Família em Ação — plataforma e quebra-cabeça em 2D
+const CONFIG = { SISTEMA:'Família em Ação', VERSAO:'0.6.0.0', DESENVOLVEDOR:'Vettore Sistemas' };
 const $ = id => document.getElementById(id);
 const VW = 480, VH = 300, DT = 1/60, G = 1400;
 const fmtT = s => { s=Math.floor(s); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); };
@@ -12,7 +12,7 @@ const PERS = [
 ];
 const KE=1, JU=2;
 const PODERES = ['💪 Força','🛡️ Proteção','🤏 Encolher'];
-const FAM_PADRAO = { sobrenome:'Oliveira', membros:[{nome:'William',vis:'oculos'},{nome:'Kelly',vis:'longo'},{nome:'Junior',vis:'bone'}] };
+const FAM_PADRAO = { sobrenome:'', membros:[{nome:'William',vis:'oculos'},{nome:'Kelly',vis:'longo'},{nome:'Junior',vis:'bone'}] };
 const H_AGACH = 20;
 
 // ---------- Save ----------
@@ -25,8 +25,8 @@ const fam = () => S.familia || FAM_PADRAO;
 function aplicaFamilia(){
   const F2=fam();
   PERS.forEach((p,i)=>{ const m=F2.membros[i]||FAM_PADRAO.membros[i]; p.nome=p.curto=m.nome; p.vis=m.vis; });
-  const sob=F2.sobrenome||'Oliveira';
-  document.title='Família '+sob; const t=$('titulo-sob'); if(t) t.textContent=sob.toUpperCase();
+  const sob=(F2.sobrenome||'').trim();
+  document.title='Família em Ação'; const t=$('titulo-sob'); if(t){ t.textContent= sob ? 'Família '+sob : ''; t.hidden=!sob; }
 }
 const ORIGINAIS={William:0,Kelly:1,Junior:2};
 const trocaNomes = txt => txt.replace(/\{(\d)\}/g,(_,i)=>PERS[+i].curto).replace(/\b(William|Kelly|Junior)\b/g, n=>PERS[ORIGINAIS[n]].curto);
@@ -323,7 +323,7 @@ function vitoria(){
 function desafiar(n,t){
   if(!S.nome){ const v=prompt('Seu nome para o desafio:',''); S.nome=limpa(v&&v.trim()); salvar(); }
   const url=`${location.origin}${location.pathname}?f=${n}&t=${t}&nm=${encodeURIComponent(S.nome)}`;
-  const txt=`Salvei a Família Oliveira na fase ${n} em ${fmtT(t)}. Consegue mais rápido?`;
+  const txt=`Salvei minha família no Família em Ação, fase ${n} em ${fmtT(t)}. Consegue mais rápido?`;
   if(navigator.share) navigator.share({text:txt,url}).catch(()=>{}); else window.open('https://wa.me/?text='+encodeURIComponent(txt+'\n'+url),'_blank');
 }
 
@@ -444,8 +444,7 @@ function telaFamilia(depois){
 $('f-membros').addEventListener('click',e=>{ const b=e.target.closest('.vis'); if(!b) return; const i=+b.dataset.i; famTmp.membros[i].vis=b.dataset.v;
   b.parentElement.querySelectorAll('.vis').forEach(x=>x.classList.toggle('on',x===b)); Som.troca(); });
 $('f-salvar').onclick=()=>{ Som.init();
-  famTmp.sobrenome = limpa($('f-sobrenome').value.trim()) .slice(0,14) || 'Oliveira';
-  if(!$('f-sobrenome').value.trim()) famTmp.sobrenome='Oliveira';
+  famTmp.sobrenome = $('f-sobrenome').value.trim() ? limpa($('f-sobrenome').value.trim()).slice(0,14) : '';
   $('f-membros').querySelectorAll('input').forEach(inp=>{ const i=+inp.dataset.i, v=inp.value.trim(); famTmp.membros[i].nome = v ? limpa(v).slice(0,12) : FAM_PADRAO.membros[i].nome; });
   S.familia=famTmp; salvar(); aplicaFamilia(); apresentar();
   const d=famDepois; famDepois=null; d ? d() : mostrar('inicio'); };

@@ -1,4 +1,4 @@
-// Família Oliveira — desenhos: ambientes, móveis e personagens (tudo original, em canvas)
+// Família em Ação — desenhos: ambientes, móveis e personagens (tudo original, em canvas)
 const T = 30;
 
 // ---------- Paletas por ambiente ----------
