@@ -56,6 +56,12 @@ a.chip{color:#fff;text-decoration:none}
 .lmis{text-align:left;margin-top:10px;font-size:14px}
 .lmis div{padding:6px 0;border-bottom:1px solid rgba(255,255,255,.08)}
 .moedas{display:inline-block;margin-top:6px;background:rgba(255,217,59,.15);color:#ffd93b;border-radius:12px;padding:4px 12px;font-weight:900}
+@media (orientation:landscape) and (max-height:560px){
+  .hud{left:0;right:auto;width:min(44vw,330px);margin:0;padding:8px}
+  .linha1{flex-wrap:wrap}
+  .missoes{flex-direction:column;overflow:visible}
+  .base{left:auto;right:0;top:0;bottom:0;flex-direction:column;justify-content:center;padding:8px}
+}
 footer{position:fixed;bottom:2px;left:0;right:0;text-align:center;font-size:10px;opacity:.45;z-index:1;pointer-events:none}
 </style>
 </head>
@@ -87,7 +93,7 @@ footer{position:fixed;bottom:2px;left:0;right:0;text-align:center;font-size:10px
 <script src="../lib/three.min.js"></script>
 <script>
 // Linha de Cores 3D — Vettore Sistemas
-const CONFIG = { SISTEMA:'Linha de Cores 3D', VERSAO:'0.1.0.0', DESENVOLVEDOR:'Vettore Sistemas' };
+const CONFIG = { SISTEMA:'Linha de Cores 3D', VERSAO:'0.1.1.0', DESENVOLVEDOR:'Vettore Sistemas' };
 const $ = id => document.getElementById(id);
 const fmt = n => Math.round(n).toLocaleString('pt-BR');
 const N=9, CORES=['#ff3b5c','#ff9f1c','#ffe14d','#2ecc71','#1fb5ff','#7b5cff','#ff5fd2'], CORINGA=7;
@@ -193,13 +199,30 @@ const elastico=p=>p===1?1:Math.pow(2,-10*p)*Math.sin((p-.075)*(2*Math.PI)/.3)+1;
 const espera=ms=>new Promise(r=>setTimeout(r,ms));
 
 // câmera responsiva
-function ajusta(){
-  const w=innerWidth,h=innerHeight; renderer.setSize(w,h,false); cam.aspect=w/h;
-  const tanH=Math.tan(cam.fov*Math.PI/360), retrato=h>w;
-  const dist=Math.max((N+5.5)/(2*tanH), (N+1.6)/(2*tanH*cam.aspect)*.98);
-  cam.position.set(0, dist*.93, dist*.38); cam.lookAt(0,-.5,retrato?.55:.3); cam.updateProjectionMatrix();
+// Enquadra o tabuleiro no espaço livre entre o topo e os botões, em qualquer tela
+function enquadrar(cam, renderer, alvo, semiX, semiZ, yMin, yMax, elev, folga){
+  const w=innerWidth, h=innerHeight; renderer.setSize(w,h,false); cam.aspect=w/h; cam.clearViewOffset();
+  const hud=document.querySelector('.hud').getBoundingClientRect(), base=document.querySelector('.base').getBoundingClientRect();
+  let L=8, R=w-8, T=hud.bottom+6, B=h-8;
+  if(base.width < w*.5){ R=Math.min(R, base.left-8); } else { B=Math.min(B, base.top-6); }
+  if(base.width < w*.5 && hud.width < w*.6){ T=8; L=Math.max(L, hud.right+8); }
+  const aw=Math.max(60,R-L), ah=Math.max(60,B-T), acx=(L+R)/2, acy=(T+B)/2;
+  const dir=new THREE.Vector3(0, Math.sin(elev), Math.cos(elev));
+  const cantos=[]; for(const x of [-semiX,semiX]) for(const y of [yMin,yMax]) for(const z of [-semiZ,semiZ]) cantos.push(new THREE.Vector3(alvo.x+x, y, alvo.z+z));
+  const caixa=()=>{ let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9; const v=new THREE.Vector3();
+    for(const c of cantos){ v.copy(c).project(cam); const px=(v.x+1)/2*w, py=(1-v.y)/2*h; x0=Math.min(x0,px); x1=Math.max(x1,px); y0=Math.min(y0,py); y1=Math.max(y1,py); }
+    return {x0,x1,y0,y1}; };
+  let D=20;
+  for(let k=0;k<8;k++){
+    cam.position.copy(alvo).addScaledVector(dir,D); cam.lookAt(alvo); cam.updateProjectionMatrix(); cam.updateMatrixWorld();
+    const b=caixa(); const s=Math.max((b.x1-b.x0)/(aw*folga), (b.y1-b.y0)/(ah*folga)); D*=s; if(Math.abs(s-1)<.01) break;
+  }
+  cam.position.copy(alvo).addScaledVector(dir,D); cam.lookAt(alvo); cam.updateProjectionMatrix(); cam.updateMatrixWorld();
+  const b=caixa(); cam.setViewOffset(w,h,(b.x0+b.x1)/2-acx,(b.y0+b.y1)/2-acy,w,h); cam.updateProjectionMatrix();
 }
-addEventListener('resize',ajusta); ajusta();
+function pontoNDC(e, canvas, ptr){ const r=canvas.getBoundingClientRect(); ptr.x=(e.clientX-r.left)/r.width*2-1; ptr.y=-((e.clientY-r.top)/r.height)*2+1; }
+function ajusta(){ enquadrar(cam, renderer, new THREE.Vector3(0,0,0), (N+1.3)/2, (N+1.3)/2, -.7, .9, 1.13, .97); }
+addEventListener('resize',ajusta); if(window.visualViewport) visualViewport.addEventListener('resize',ajusta); ajusta();
 
 // ---------- Regras ----------
 function vazias(){ const v=[]; for(let i=0;i<N*N;i++) if(grade[i]<0) v.push(i); return v; }
@@ -321,7 +344,7 @@ function reconstruir(){ bolas.forEach((b,i)=>{ if(b) tab.remove(b); bolas[i]=nul
 const ray=new THREE.Raycaster(), ptr=new THREE.Vector2();
 $('cena').addEventListener('pointerdown',e=>{
   Som.init(); if(ocupado||fim||!$('modal').hidden) return;
-  ptr.x=e.clientX/innerWidth*2-1; ptr.y=-(e.clientY/innerHeight)*2+1; ray.setFromCamera(ptr,cam);
+  pontoNDC(e,$('cena'),ptr); ray.setFromCamera(ptr,cam);
   const alvos=[...celulas,...bolas.filter(Boolean)]; const hit=ray.intersectObjects(alvos)[0]; if(!hit) return;
   let i=hit.object.userData.i; if(i===undefined) i=bolas.indexOf(hit.object); if(i<0) return;
   if(modoBomba) return bombardear(i);
@@ -394,7 +417,6 @@ function quadro(t){
   if(sel!==null && bolas[sel] && !ocupado){ const b=bolas[sel]; const s=Math.abs(Math.sin(tempo*7)); b.position.y=.38+s*.45; b.scale.set(1+(1-s)*.08,1-(1-s)*.1,1+(1-s)*.08); b.rotation.y+=dt*3; }
   fantasmas.forEach((f,k)=>{ f.position.y=.15+Math.sin(tempo*3+k)*.04; });
   rim.position.x=Math.sin(tempo*.4)*7; rim2.position.z=Math.cos(tempo*.3)*7-2;
-  tab.rotation.y=Math.sin(tempo*.25)*.015;
   renderer.render(cena,cam); requestAnimationFrame(quadro);
 }
 novoJogo(); requestAnimationFrame(quadro);

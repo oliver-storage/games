@@ -183,3 +183,49 @@ function desenhaPers(c, p){
     else quadroNegro(c, cx+(d>0?lt-2:-lt-4), p.y+4, 6, H-12);
   }
 }
+
+// ---------- Itens perdidos da casa (achados no Família em Ação, aparecem no Lar dos Gatinhos) ----------
+const CASA_KEY='casa_compartilhada_v1';
+function perdidosAchados(){ try{ const v=JSON.parse(localStorage.getItem(CASA_KEY)||'[]'); return Array.isArray(v)?v:[]; }catch(e){ return []; } }
+function marcarAchado(id){ const a=perdidosAchados(); if(!a.includes(id)){ a.push(id); try{ localStorage.setItem(CASA_KEY,JSON.stringify(a)); }catch(e){} } }
+// d(c,x,b): desenha com a base em b e a esquerda em x (cerca de 30px de altura). casa: posição no cômodo do Lar dos Gatinhos
+const PERDIDOS = [
+  { id:'retrato', nome:'Porta-retrato da família', comodo:'sala', fase:1, casa:{x:214,b:70},
+    d(c,x,b){ c.fillStyle='#c98a3a'; c.fillRect(x,b-28,26,24); c.fillStyle='#fff6e0'; c.fillRect(x+3,b-25,20,18);
+      c.fillStyle='#e0ac69'; c.beginPath(); c.arc(x+9,b-18,3,0,7); c.arc(x+17,b-17,3.5,0,7); c.fill(); c.fillStyle='#e84393'; c.fillRect(x+6,b-14,6,6); c.fillStyle='#1f3a93'; c.fillRect(x+14,b-13,6,6);
+      c.fillStyle='#8a5a30'; c.fillRect(x+10,b-4,6,4); } },
+  { id:'radio', nome:'Rádio antigo', comodo:'sala', fase:1, casa:{x:220,b:206},
+    d(c,x,b){ c.fillStyle='#a0522d'; c.beginPath(); c.roundRect(x,b-22,30,22,5); c.fill(); c.fillStyle='#f3e3cc'; c.beginPath(); c.arc(x+10,b-11,6,0,7); c.fill();
+      c.strokeStyle='#8a5a30'; c.lineWidth=1; for(let k=0;k<3;k++){ c.beginPath(); c.arc(x+10,b-11,2+k*1.6,0,7); c.stroke(); } c.fillStyle='#f2c14e'; c.fillRect(x+19,b-17,8,3); c.fillStyle='#333'; c.beginPath(); c.arc(x+21,b-7,2,0,7); c.arc(x+26,b-7,2,0,7); c.fill();
+      c.strokeStyle='#555'; c.lineWidth=1.5; c.beginPath(); c.moveTo(x+24,b-22); c.lineTo(x+30,b-34); c.stroke(); } },
+  { id:'chaleira', nome:'Chaleira da vovó', comodo:'cozinha', fase:2, casa:{x:296,b:100},
+    d(c,x,b){ c.fillStyle='#e74c3c'; c.beginPath(); c.ellipse(x+14,b-10,12,10,0,0,7); c.fill(); c.fillRect(x+4,b-4,20,4);
+      c.strokeStyle='#e74c3c'; c.lineWidth=3; c.beginPath(); c.moveTo(x+24,b-12); c.lineTo(x+31,b-19); c.stroke(); c.strokeStyle='#333'; c.lineWidth=2; c.beginPath(); c.arc(x+14,b-20,7,Math.PI,0); c.stroke();
+      c.fillStyle='#fff'; c.beginPath(); c.arc(x+10,b-12,2,0,7); c.arc(x+16,b-9,1.5,0,7); c.fill(); } },
+  { id:'fruteira', nome:'Fruteira', comodo:'cozinha', fase:2, casa:{x:312,b:206},
+    d(c,x,b){ c.fillStyle='#e9d5b0'; c.fillRect(x+12,b-10,6,10); c.fillRect(x+6,b-2,18,2);
+      [['#e74c3c',8,-16],['#f39c12',16,-17],['#f1c40f',22,-14],['#8e44ad',12,-22],['#27ae60',19,-23]].forEach(([cor,dx,dy])=>{ c.fillStyle=cor; c.beginPath(); c.arc(x+dx,b+dy,5,0,7); c.fill(); });
+      c.fillStyle='#c9a77a'; c.beginPath(); c.moveTo(x,b-14); c.lineTo(x+30,b-14); c.lineTo(x+24,b-8); c.lineTo(x+6,b-8); c.fill(); } },
+  { id:'regador', nome:'Regador', comodo:'jardim', fase:3, casa:{x:240,b:206},
+    d(c,x,b){ c.fillStyle='#46a8ff'; c.beginPath(); c.moveTo(x+6,b); c.lineTo(x+24,b); c.lineTo(x+22,b-20); c.lineTo(x+8,b-20); c.fill();
+      c.strokeStyle='#46a8ff'; c.lineWidth=3; c.beginPath(); c.moveTo(x+8,b-10); c.lineTo(x,b-22); c.stroke(); c.beginPath(); c.arc(x+15,b-20,7,Math.PI,0); c.stroke();
+      c.fillStyle='#2e86de'; c.fillRect(x-3,b-25,6,4); } },
+  { id:'passarinho', nome:'Casinha de passarinho', comodo:'jardim', fase:3, casa:{x:318,b:206},
+    d(c,x,b){ c.fillStyle='#8a5a30'; c.fillRect(x+13,b-14,4,14); c.fillStyle='#f4a259'; c.fillRect(x+5,b-32,20,18);
+      c.fillStyle='#c0392b'; c.beginPath(); c.moveTo(x+2,b-32); c.lineTo(x+15,b-42); c.lineTo(x+28,b-32); c.fill(); c.fillStyle='#3b2412'; c.beginPath(); c.arc(x+15,b-24,4,0,7); c.fill();
+      c.fillStyle='#ffd93b'; c.beginPath(); c.arc(x+22,b-14,3,0,7); c.fill(); } },
+  { id:'ursinho', nome:'Ursinho de pelúcia', comodo:'quarto', fase:4, casa:{x:100,b:206},
+    d(c,x,b){ c.fillStyle='#b9805a'; c.beginPath(); c.arc(x+8,b-26,4,0,7); c.arc(x+22,b-26,4,0,7); c.arc(x+15,b-20,8,0,7); c.ellipse(x+15,b-7,10,8,0,0,7); c.fill();
+      c.fillStyle='#e8c9a6'; c.beginPath(); c.arc(x+15,b-17,3.5,0,7); c.ellipse(x+15,b-6,5,4,0,0,7); c.fill(); c.fillStyle='#2b1a10'; c.fillRect(x+11,b-23,2,2); c.fillRect(x+17,b-23,2,2); c.fillRect(x+14,b-19,2,2);
+      c.fillStyle='#e84393'; c.fillRect(x+10,b-14,10,3); } },
+  { id:'violao', nome:'Violão', comodo:'quarto', fase:4, casa:{x:336,b:206},
+    d(c,x,b){ c.save(); c.translate(x+14,b); c.rotate(-.18); c.fillStyle='#d9822b'; c.beginPath(); c.ellipse(0,-9,9,9,0,0,7); c.ellipse(0,-21,7,7,0,0,7); c.fill();
+      c.fillStyle='#3b2412'; c.beginPath(); c.arc(0,-13,3,0,7); c.fill(); c.fillStyle='#6b4220'; c.fillRect(-1.5,-42,3,22); c.fillRect(-3,-46,6,5); c.restore(); } },
+  { id:'album', nome:'Álbum de fotos', comodo:'sala', fase:5, casa:{x:6,b:206},
+    d(c,x,b){ c.fillStyle='#1f6fb2'; c.fillRect(x,b-8,28,8); c.fillStyle='#fff6e0'; c.fillRect(x+2,b-10,24,3); c.fillStyle='#1f6fb2'; c.fillRect(x,b-13,28,4);
+      c.fillStyle='#f2c14e'; c.beginPath(); c.arc(x+14,b-11,2,0,7); c.fill(); c.fillStyle='#e84393'; c.beginPath(); c.moveTo(x+20,b-13); c.lineTo(x+20,b-20); c.lineTo(x+24,b-17); c.fill(); } },
+  { id:'bolo', nome:'Bolo de aniversário', comodo:'cozinha', fase:5, casa:{x:194,b:206},
+    d(c,x,b){ c.fillStyle='#c9a77a'; c.fillRect(x+13,b-10,4,10); c.fillRect(x+6,b-2,18,2); c.fillStyle='#fff'; c.fillRect(x+2,b-12,26,3);
+      c.fillStyle='#f7b2c4'; c.fillRect(x+4,b-26,22,14); c.fillStyle='#fff'; c.beginPath(); c.moveTo(x+4,b-26); for(let k=0;k<=4;k++) c.quadraticCurveTo(x+4+k*5.5-2.7,b-20,x+4+k*5.5,b-26); c.fill();
+      c.fillStyle='#46a8ff'; c.fillRect(x+14,b-33,2,7); c.fillStyle='#ffd93b'; c.beginPath(); c.ellipse(x+15,b-35,2,3,0,0,7); c.fill(); } },
+];

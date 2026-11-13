@@ -65,6 +65,7 @@ footer{text-align:center;font-size:11px;opacity:.6;padding:6px}
 #c-pulo{background:#22b04a;box-shadow:0 4px 0 #15803d}
 #c-acao{background:#d97706;box-shadow:0 4px 0 #92400e}
 #c-troca{width:52px;font-size:22px}
+#perdidos-total a{color:#3ddc84;font-weight:800}
 .sobre{text-align:center;font-weight:800;font-size:18px;color:#ffd93b;margin-top:-6px}
 /* montar família */
 #t-familia{padding:16px;gap:12px;overflow-y:auto;background:#1b1046}
@@ -116,6 +117,7 @@ footer{text-align:center;font-size:11px;opacity:.6;padding:6px}
     <h1>FAMÍLIA<br><span>EM AÇÃO</span></h1>
     <p class="sobre" id="titulo-sob" hidden></p>
     <p class="hist">📺 A TV puxou a família para dentro do videogame. Só juntos eles saem!</p>
+    <p class="hist" id="perdidos-total"></p>
     <div id="elenco"></div>
     <button class="btn verde" id="b-jogar">Jogar</button>
     <button class="btn sec" id="b-familia">👨‍👩‍👦 Montar minha família</button>
@@ -146,7 +148,7 @@ footer{text-align:center;font-size:11px;opacity:.6;padding:6px}
   <section class="tela" id="t-jogo">
     <div class="hud">
       <div id="pers"></div>
-      <div class="info2"><span id="h-est">⭐ 0/3</span><span id="h-saida">🚪 0/4</span><span id="h-tempo">⏱ 0:00</span></div>
+      <div class="info2"><span id="h-est">⭐ 0/3</span><span id="h-perd">🔍 0/2</span><span id="h-saida">🚪 0/4</span><span id="h-tempo">⏱ 0:00</span></div>
       <button class="mini" id="j-pausa">⏸</button>
     </div>
     <div class="palco"><canvas id="tela"></canvas><div id="aviso"></div></div>

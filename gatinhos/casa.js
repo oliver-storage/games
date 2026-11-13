@@ -109,6 +109,9 @@ function desenhaComodo(c, W, H, cm, comprados, gatosDoComodo, t, fantasma){
   c.fillStyle=cm.chao; c.fillRect(0,b,W,H-b); c.fillStyle=cm.chaoL; for(let x=0;x<W;x+=40) c.fillRect(x,b,2,H-b); c.fillRect(0,b+14,W,1);
   // itens já comprados (na ordem do cômodo)
   cm.itens.forEach(it=>{ if(comprados.includes(it.id)){ c.save(); if(fantasma===it.id){ const k=Math.min(1,fantasma_t); c.globalAlpha=k; c.translate(W/2,b); c.scale(.6+.4*k,.6+.4*k); c.translate(-W/2,-b); } it.d(c,b); c.restore(); } });
+  // itens perdidos que a família achou (Família em Ação)
+  const ach=perdidosAchados();
+  PERDIDOS.filter(q=>q.comodo===cm.id && ach.includes(q.id)).forEach(q=>{ c.save(); q.d(c,q.casa.x,q.casa.b); c.restore(); });
   // gatinhos que já chegaram
   gatosDoComodo.forEach((id,k)=>{ const g=GATOS.find(x=>x.id===id); const px=[200,70][k]||150, py=b+16; gato(c,px+Math.sin(t*.4+k)*6,py,g,k?'dorme':'senta',t,1); });
 }

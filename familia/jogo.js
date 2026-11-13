@@ -1,5 +1,5 @@
 // Família em Ação — plataforma e quebra-cabeça em 2D
-const CONFIG = { SISTEMA:'Família em Ação', VERSAO:'0.6.0.0', DESENVOLVEDOR:'Vettore Sistemas' };
+const CONFIG = { SISTEMA:'Família em Ação', VERSAO:'0.7.0.0', DESENVOLVEDOR:'Vettore Sistemas' };
 const $ = id => document.getElementById(id);
 const VW = 480, VH = 300, DT = 1/60, G = 1400;
 const fmtT = s => { s=Math.floor(s); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); };
@@ -52,14 +52,15 @@ function novoPers(i, x, yBase){ const d=PERS[i]; return { ...d, i, x, y:yBase-d.
 function carregar(n){
   const def=FASES[n-1];
   const mapa=def.mapa.map(l=>l.split('')); const W=mapa[0].length;
-  const ps=[], robos=[];
+  const ps=[], robos=[], perd=[];
   for(let y=0;y<10;y++) for(let x=0;x<W;x++){
     const c=mapa[y][x];
     if('123'.includes(c)){ const i=+c-1; ps[i]=novoPers(i, x*T+6, (y+1)*T); mapa[y][x]='.'; }
+    if(c==='X'||c==='Y'){ const it=PERDIDOS.filter(q=>q.fase===n)[c==='X'?0:1]; if(it) perd.push({ it, x, y, achado:perdidosAchados().includes(it.id) }); mapa[y][x]='.'; }
     if(c==='R'){ robos.push({ x:x*T+4, y:y*T+6, w:22, h:24, vx:40, vy:0, dir:-1, hp:2, cd:1.5, morto:false, pisca:0, mira:false }); mapa[y][x]='.'; }
   }
   let saida={x:0,y:0}; for(let y=0;y<10;y++) for(let x=0;x<W;x++) if(mapa[y][x]==='S') saida={x,y};
-  F = { n, def, tema:def.tema, mapa, W, ps, robos, ativo:0, aberto:false, porta:false, cam:0, t:0, est:0, totalEst:def.mapa.join('').split('*').length-1, tiros:[], lasers:[], parts:[], saida, fim:false };
+  F = { n, def, perd, novos:[], tema:def.tema, mapa, W, ps, robos, ativo:0, aberto:false, porta:false, cam:0, t:0, est:0, totalEst:def.mapa.join('').split('*').length-1, tiros:[], lasers:[], parts:[], saida, fim:false };
 }
 
 // ---------- Tiles ----------
@@ -158,7 +159,15 @@ function quebrar(p){
   for(let y=y1;y<=y2;y++) if(tile(fx,y)==='Q'){ F.mapa[y][fx]='.'; estilhaço(fx*T+15,y*T+15,'#c0704a',12); Som.quebra(); vibrar(40); }
   for(const r of F.robos) if(!r.morto && sobrepoe({x:p.x-4,y:p.y,w:p.w+8,h:p.h},r)) matarRobo(r);
 }
-function coletar(p){
+function achaItens(p){
+  for(const q of F.perd){ if(q.achado) continue;
+    const cx=q.x*T+15, cy=q.y*T+15;
+    if(cx>p.x-8 && cx<p.x+p.w+8 && cy>p.y-6 && cy<p.y+p.h+6){
+      q.achado=true; marcarAchado(q.it.id); F.novos.push(q.it);
+      Som.estrela(); Som.clique(); vibrar([20,30,20]); estilhaço(cx,cy,'#f2c14e',18); estilhaço(cx,cy,'#81d8d0',10);
+      aviso(`🔍 Achou: ${q.it.nome}! Foi para o Lar dos Gatinhos 🐱`); hudTopo(); } }
+}
+function coletar(p){ achaItens(p);
   const x1=Math.floor(p.x/T), x2=Math.floor((p.x+p.w-1)/T), y1=Math.floor(p.y/T), y2=Math.floor((p.y+p.h-1)/T);
   for(let y=y1;y<=y2;y++) for(let x=x1;x<=x2;x++){
     const c=tile(x,y);
@@ -218,6 +227,10 @@ function desenhar(){
   for(let y=0;y<10;y++) for(let x=x0;x<=x1;x++) desenhaTile(F.mapa[y][x],x*T,y*T,x,y);
   for(let x=x0;x<=x1;x++) for(let y=0;y<10;y++) if(F.mapa[y][x]==='F'){ c.strokeStyle='rgba(180,230,255,.45)'; c.lineWidth=2;
     for(let k=0;k<4;k++){ const yy=y*T-((F.t*120+k*45)%240); c.beginPath(); c.moveTo(x*T+6+k*6,yy); c.lineTo(x*T+6+k*6,yy-14); c.stroke(); } }
+  for(const q of F.perd){ if(q.achado) continue; const bx=q.x*T, by=q.y*T, bob=Math.sin(F.t*3+q.x)*2.5, pul=.5+Math.sin(F.t*5)*.25;
+    const g=c.createRadialGradient(bx+15,by+15,2,bx+15,by+15,24); g.addColorStop(0,`rgba(255,230,120,${pul})`); g.addColorStop(1,'rgba(255,230,120,0)'); c.fillStyle=g; c.fillRect(bx-10,by-10,50,50);
+    c.save(); c.translate(bx+15,by+T-4+bob); c.scale(.78,.78); q.it.d(c,-15,0); c.restore();
+    c.fillStyle='#fff'; c.font='bold 10px system-ui'; c.textAlign='center'; c.fillText('?',bx+26,by+4+bob); }
   for(const r of F.robos) if(!r.morto) desenhaRobo(r);
   F.ps.forEach((p,i)=>{ if(i!==F.ativo) desenhaP(p,false); }); desenhaP(F.ps[F.ativo],true);
   c.fillStyle='#e8e8e8'; for(const s of F.tiros){ c.beginPath(); c.arc(s.x,s.y,3,0,7); c.fill(); }
@@ -272,7 +285,7 @@ function hudPers(){
   $('pers').querySelectorAll('canvas').forEach(c2=>retrato(c2, F.ps[+c2.dataset.p]));
   $('c-acao').innerHTML = `${F.ps[F.ativo].ic}<small>Poder</small>`;
 }
-function hudTopo(){ $('h-est').textContent=`⭐ ${F.est}/${F.totalEst}`; }
+function hudTopo(){ $('h-est').textContent=`⭐ ${F.est}/${F.totalEst}`; $('h-perd').textContent=`🔍 ${F.perd.filter(q=>q.achado).length}/${F.perd.length}`; }
 let ultT=-1;
 function hudTempo(){ const s=Math.floor(F.t); if(s!==ultT){ ultT=s; $('h-tempo').textContent='⏱ '+fmtT(F.t); $('h-saida').textContent=`🚪 ${F.ps.filter(p=>p.saida).length}/3`; } }
 $('pers').addEventListener('pointerdown',e=>{ const b=e.target.closest('.pc'); if(b){ e.preventDefault(); Som.init(); selecionar(+b.dataset.i); } });
@@ -313,6 +326,7 @@ function vitoria(){
   const mostraFim=()=>{ modal(`<h2>Família salva!</h2><p class="sub">Fase ${n} · ${F.def.nome}</p>
       <div class="estrelas">${[0,1,2].map(k=>`<span class="${k<est?'on':''}">★</span>`).join('')}</div>
       <p style="font-size:22px;font-weight:900">⏱ ${fmtT(t)} ${recorde?'· recorde!':''}</p>
+      ${F.novos.length?`<div class="caixa">🔍 Itens achados: <b>${F.novos.map(i=>i.nome).join(', ')}</b><br>Já estão no <a href="../gatinhos/index.html" style="color:#3ddc84">Lar dos Gatinhos</a>!</div>`:''}
       ${D?`<div class="caixa"><b>${t<D.t?'Você venceu!':t>D.t?D.nm+' venceu.':'Empate!'}</b> Você ${fmtT(t)} × ${fmtT(D.t)} ${D.nm}</div>`:''}
       ${n<FASES.length?'<button class="btn verde" id="m-prox">Próxima fase ›</button>':''}
       <button class="btn zap" id="m-des">Desafiar um amigo</button><button class="btn sec" id="m-menu">Fases</button>`);
@@ -457,7 +471,7 @@ function fecharModal(){ $('modal').hidden=true; }
 function telaFases(){
   parar(); pararCena(); fecharModal();
   $('lista').innerHTML = FASES.map((f,i)=>{ const n=i+1, bloq=n>S.desbloq, e=S.est[n]||0;
-    return `<button class="fase ${bloq?'bloq':''}" data-n="${n}"><span class="num">${bloq?'🔒':n}</span><span class="info"><b>${f.nome}</b><small>${bloq?'Complete a anterior':(S.tempo[n]?'Recorde '+fmtT(S.tempo[n]):'Ainda não jogada')}</small></span><span class="est">${'★'.repeat(e)}<i>${'★'.repeat(3-e)}</i></span></button>`; }).join('');
+    return `<button class="fase ${bloq?'bloq':''}" data-n="${n}"><span class="num">${bloq?'🔒':n}</span><span class="info"><b>${f.nome}</b><small>${bloq?'Complete a anterior':(S.tempo[n]?'Recorde '+fmtT(S.tempo[n]):'Ainda não jogada')} · 🔍 ${PERDIDOS.filter(q=>q.fase===n&&perdidosAchados().includes(q.id)).length}/${PERDIDOS.filter(q=>q.fase===n).length}</small></span><span class="est">${'★'.repeat(e)}<i>${'★'.repeat(3-e)}</i></span></button>`; }).join('');
   mostrar('fases');
 }
 $('lista').addEventListener('click',e=>{ const b=e.target.closest('.fase'); if(!b) return; const n=+b.dataset.n; if(n>S.desbloq) return; iniciarFase(n); });
@@ -472,7 +486,7 @@ function comecar(){ if(!S.viuAbertura){ S.viuAbertura=true; salvar(); tocarCena(
 $('b-jogar').onclick=()=>{ Som.init(); if(!S.familia) telaFamilia(comecar); else comecar(); };
 $('b-familia').onclick=()=>{ Som.init(); telaFamilia(); };
 $('b-historia').onclick=()=>{ Som.init(); tocarCena(CENAS.abertura, ()=>mostrar('inicio')); };
-$('b-volta').onclick=()=>mostrar('inicio');
+$('b-volta').onclick=()=>{ apresentar(); mostrar('inicio'); };
 $('cena-pular').onclick=e=>{ e.stopPropagation(); pularCena(); };
 $('t-cena').addEventListener('pointerdown',e=>{ if(e.target.id==='cena-pular') return; Som.init(); avancarCena(); });
 $('j-pausa').onclick=()=>{ if(!F||F.fim) return; rodando=false;
@@ -484,6 +498,7 @@ $('b-som').onclick=()=>{ S.som=!S.som; salvar(); $('b-som').textContent=S.som?'�
 function ajustaCanvas(c,x){ const dpr=Math.min(2,devicePixelRatio||1); c.width=VW*dpr; c.height=VH*dpr; x.setTransform(dpr,0,0,dpr,0,0); }
 
 function apresentar(){
+  const ach=perdidosAchados().filter(id=>PERDIDOS.some(q=>q.id===id)).length; const el=$('perdidos-total'); if(el) el.innerHTML=`🔍 Itens perdidos da casa: <b>${ach}/${PERDIDOS.length}</b> · eles vão para o <a href="../gatinhos/index.html">Lar dos Gatinhos</a>`;
   $('elenco').innerHTML = PERS.map((p,i)=>`<div class="ator"><canvas width="60" height="60" data-i="${i}"></canvas><div><b>${p.nome}</b><small>${p.ic} ${p.poder}</small></div></div>`).join('');
   $('elenco').querySelectorAll('canvas').forEach(c2=>{ const i=+c2.dataset.i, d=PERS[i]; const cc=c2.getContext('2d');
     cc.save(); cc.translate(30,56); cc.scale(1.15,1.15); desenhaPers(cc,{...d,x:-9,y:-d.h,w:18,h:d.h,dir:1,anim:0,vx:0,chao:true,guarda:false,dash:0,agach:false}); cc.restore(); });

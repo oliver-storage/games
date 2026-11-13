@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0d0b2a">
+<title>Blocos em Queda</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#fff;background:radial-gradient(ellipse at 50% 0%,#2b1f6e 0%,#130e3a 55%,#07061a 100%);user-select:none;-webkit-user-select:none;touch-action:manipulation}
+button{font-family:inherit;color:inherit;border:0;cursor:pointer;background:none}
+#estrelas{position:fixed;inset:0;z-index:0}
+.app{position:relative;z-index:1;height:100dvh;max-width:560px;margin:0 auto;display:flex;flex-direction:column;padding:calc(8px + env(safe-area-inset-top)) 10px calc(8px + env(safe-area-inset-bottom))}
+.topo{display:flex;align-items:center;gap:8px}
+.chip{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:14px;padding:6px 10px;font-weight:800;font-size:14px;color:#fff;text-decoration:none;white-space:nowrap}
+.titulo{flex:1;text-align:center;font-weight:900;font-size:19px;letter-spacing:1px;background:linear-gradient(90deg,#ff5fa8,#ffd23f,#3ddc84,#46a8ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.miolo{flex:1;min-height:0;display:flex;gap:8px;margin-top:8px}
+.lado{width:76px;display:flex;flex-direction:column;gap:8px;flex-shrink:0}
+.caixa{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:6px;text-align:center}
+.caixa small{display:block;font-size:10px;font-weight:800;letter-spacing:1px;opacity:.7}
+.caixa b{display:block;font-size:18px;font-weight:900}
+.caixa canvas{display:block;width:64px;height:48px;margin:2px auto 0}
+.caixa.prox canvas{height:44px}
+#guarda-cx{cursor:pointer}
+#guarda-cx.usado canvas{opacity:.35}
+.campo{flex:1;min-width:0;display:flex;align-items:center;justify-content:center;position:relative}
+#tab{display:block;height:100%;max-width:100%;aspect-ratio:10/20;border-radius:12px;box-shadow:0 0 0 2px rgba(255,255,255,.18),0 0 30px rgba(120,90,255,.35);background:rgba(5,4,20,.85);touch-action:none}
+.nivel{margin-top:6px}
+.barra{height:6px;border-radius:4px;background:rgba(255,255,255,.12);overflow:hidden;margin-top:3px}
+.barra i{display:block;height:100%;width:0;background:linear-gradient(90deg,#3ddc84,#46a8ff);transition:width .4s}
+.missoes{display:flex;gap:5px;margin-top:6px;overflow-x:auto}
+.mis{flex-shrink:0;font-size:11px;font-weight:800;padding:4px 8px;border-radius:10px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12)}
+.mis.ok{background:rgba(61,220,132,.25);border-color:#3ddc84}
+.ctrl{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-top:8px}
+.k{height:58px;border-radius:16px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);font-size:24px;font-weight:900;box-shadow:0 4px 0 rgba(0,0,0,.35);touch-action:none;line-height:1}
+.k small{display:block;font-size:9px;font-weight:800;margin-top:2px;opacity:.85}
+.k.on{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.35);background:rgba(255,210,63,.4)}
+#k-cai{background:rgba(61,220,132,.3)}
+#k-gira{background:rgba(70,168,255,.3)}
+.grito{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);font-size:42px;font-weight:900;z-index:5;pointer-events:none;white-space:nowrap;background:linear-gradient(90deg,#ff5fa8,#ffd23f,#3ddc84,#46a8ff);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 4px 0 rgba(0,0,0,.5));animation:grito 1.1s forwards}
+@keyframes grito{0%{transform:translate(-50%,-50%) scale(.3)}25%{transform:translate(-50%,-50%) scale(1.15)}75%{opacity:1}100%{transform:translate(-50%,-90%);opacity:0}}
+#toast{position:fixed;left:50%;top:70px;transform:translateX(-50%);background:rgba(0,0,0,.75);padding:8px 14px;border-radius:16px;font-weight:800;font-size:14px;z-index:6;opacity:0;transition:.3s;pointer-events:none;white-space:nowrap}
+#toast.on{opacity:1}
+.modal{position:fixed;inset:0;background:rgba(5,4,20,.7);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10}
+.mbox{background:linear-gradient(160deg,#2b1f6e,#141040);border:1px solid rgba(255,255,255,.2);border-radius:24px;padding:22px 18px 18px;width:100%;max-width:380px;text-align:center;animation:entra .35s cubic-bezier(.34,1.5,.64,1);max-height:92dvh;overflow-y:auto}
+@keyframes entra{from{transform:scale(.7);opacity:0}}
+.mbox h2{font-size:28px}
+.mbox p{margin-top:8px;line-height:1.4;color:#d8d2ff}
+.grande{font-size:54px;font-weight:900;margin:4px 0;background:linear-gradient(90deg,#ffd23f,#ff5fa8);-webkit-background-clip:text;background-clip:text;color:transparent}
+.btn{display:block;width:100%;padding:14px;border-radius:16px;font-size:18px;font-weight:900;margin-top:10px;background:linear-gradient(180deg,#7b5cff,#5432d8);box-shadow:0 5px 0 #34208f}
+.btn.verde{background:linear-gradient(180deg,#5fe07a,#22b04a);box-shadow:0 5px 0 #17803a}
+.btn.zap{background:linear-gradient(180deg,#3ee07a,#16a34a);box-shadow:0 5px 0 #0f7a35}
+.btn.sec{background:rgba(255,255,255,.1);box-shadow:0 5px 0 rgba(0,0,0,.3)}
+.btn:active{transform:translateY(3px)}
+.regras{text-align:left;font-size:14px;line-height:1.5;color:#e6e1ff;margin-top:8px}
+.regras li{margin:4px 0 4px 18px}
+.lmis{text-align:left;margin-top:10px;font-size:14px}
+.lmis div{padding:5px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.moedas{display:inline-block;margin-top:6px;background:rgba(255,210,63,.15);color:#ffd23f;border-radius:12px;padding:4px 12px;font-weight:900}
+footer{text-align:center;font-size:10px;opacity:.5;margin-top:4px}
+@media (min-width:700px) and (min-height:700px){ .lado{width:96px} .caixa canvas{width:80px;height:60px} }
+</style>
+</head>
+<body>
+<canvas id="estrelas"></canvas>
+<div class="app">
+  <div class="topo">
+    <a class="chip" href="../index.html">‹</a>
+    <span class="chip" id="h-rec">🏆 0</span>
+    <div class="titulo">BLOCOS EM QUEDA</div>
+    <button class="chip" id="h-som">🔊</button>
+    <button class="chip" id="h-pausa">⏸</button>
+  </div>
+  <div class="miolo">
+    <div class="lado">
+      <div class="caixa" id="guarda-cx"><small>GUARDAR</small><canvas id="c-guarda" width="128" height="96"></canvas></div>
+      <div class="caixa"><small>PONTOS</small><b id="h-pts">0</b></div>
+      <div class="caixa"><small>LINHAS</small><b id="h-lin">0</b></div>
+      <div class="caixa"><small>NÍVEL</small><b id="h-niv">1</b><div class="barra"><i id="h-nbar"></i></div></div>
+    </div>
+    <div class="campo"><canvas id="tab"></canvas></div>
+    <div class="lado">
+      <div class="caixa prox"><small>PRÓXIMAS</small><canvas id="c-p0" width="128" height="88"></canvas><canvas id="c-p1" width="128" height="88"></canvas><canvas id="c-p2" width="128" height="88"></canvas></div>
+      <div class="caixa"><small>COMBO</small><b id="h-combo">–</b></div>
+    </div>
+  </div>
+  <div class="missoes" id="h-mis"></div>
+  <div class="ctrl">
+    <button class="k" id="k-esq">◀</button>
+    <button class="k" id="k-gira">⟳<small>Girar</small></button>
+    <button class="k" id="k-dir">▶</button>
+    <button class="k" id="k-desce">▼<small>Descer</small></button>
+    <button class="k" id="k-cai">⤓<small>Cair</small></button>
+  </div>
+  <footer id="rodape"></footer>
+</div>
+<div id="toast"></div>
+<div class="modal" id="modal" hidden><div class="mbox" id="mbox"></div></div>
+<script>
+// Blocos em Queda — Vettore Sistemas
+const CONFIG={ SISTEMA:'Blocos em Queda', VERSAO:'0.1.0.0', DESENVOLVEDOR:'Vettore Sistemas' };
+const $=id=>document.getElementById(id);
+const fmt=n=>Math.round(n).toLocaleString('pt-BR');
+const C=10, L=20, OCULTAS=2;
+
+// ---------- save ----------
+const SK='blocos_em_queda_v1';
+let S; try{ S=Object.assign({rec:0,xp:0,som:true,jogos:0,dia:{}},JSON.parse(localStorage.getItem(SK)||'{}')); }catch(e){ S={rec:0,xp:0,som:true,jogos:0,dia:{}}; }
+const salvar=()=>{ try{ localStorage.setItem(SK,JSON.stringify(S)); }catch(e){} };
+
+// ---------- peças (paleta própria) ----------
+const PECAS={
+  I:{c:['#7af0ff','#1fb5d6','#0b6a82'], m:[[0,1],[1,1],[2,1],[3,1]]},
+  O:{c:['#fff09a','#f2c414','#9c7a00'], m:[[1,0],[2,0],[1,1],[2,1]]},
+  T:{c:['#ffb3f0','#e04fc8','#8a1d78'], m:[[1,0],[0,1],[1,1],[2,1]]},
+  S:{c:['#b8ff9e','#46c43a','#1f6e16'], m:[[1,0],[2,0],[0,1],[1,1]]},
+  Z:{c:['#ffb0a8','#ff4d5e','#9c1424'], m:[[0,0],[1,0],[1,1],[2,1]]},
+  J:{c:['#b6c6ff','#4d6bff','#1d2b9c'], m:[[0,0],[0,1],[1,1],[2,1]]},
+  L:{c:['#ffd3a0','#ff9124','#a34c00'], m:[[2,0],[0,1],[1,1],[2,1]]},
+};
+const TIPOS=Object.keys(PECAS);
+function giraMatriz(m,tipo,vezes){ let r=m.map(p=>[...p]); const n=tipo==='I'||tipo==='O'?4:3; for(let k=0;k<((vezes%4)+4)%4;k++) r=r.map(([x,y])=>[n-1-y,x]); if(tipo==='O') return PECAS.O.m.map(p=>[...p]); return r; }
+// chutes de parede (simples e generosos)
+const CHUTES=[[0,0],[-1,0],[1,0],[0,-1],[-2,0],[2,0],[-1,-1],[1,-1]];
+
+// ---------- som ----------
+const Som={ ctx:null,
+  init(){ if(!this.ctx){ try{ this.ctx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(this.ctx&&this.ctx.state==='suspended') this.ctx.resume(); },
+  tom(f,d=.08,tipo='square',vol=.04,q=0,f2){ if(!S.som||!this.ctx) return; const c=this.ctx,t=c.currentTime+q,o=c.createOscillator(),g=c.createGain();
+    o.type=tipo; o.frequency.setValueAtTime(f,t); o.frequency.exponentialRampToValueAtTime(f2||f*1.15,t+d); g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(.001,t+d); o.connect(g).connect(c.destination); o.start(t); o.stop(t+d+.02); },
+  move(){ this.tom(330,.04,'triangle',.03); }, gira(){ this.tom(520,.06,'triangle',.04,0,700); }, trava(){ this.tom(140,.08,'square',.05,0,90); },
+  cai(){ this.tom(220,.12,'sawtooth',.05,0,80); },
+  linha(n){ const base=[523,659,784,1047]; for(let k=0;k<n+1;k++) this.tom(base[Math.min(k,3)]*(k>3?1.26:1),.14,'square',.05,k*.07); },
+  nivel(){ [523,659,784,1047,1319].forEach((f,i)=>this.tom(f,.12,'triangle',.06,i*.08)); }, fim(){ [392,330,262,196].forEach((f,i)=>this.tom(f,.25,'triangle',.07,i*.18)); },
+  moeda(){ this.tom(990,.06,'square',.04); this.tom(1320,.08,'square',.04,.06); }
+};
+const vibrar=p=>{ try{ navigator.vibrate&&navigator.vibrate(p); }catch(e){} };
+
+// ---------- estado ----------
+let G=null;
+const MISSOES=[
+  {id:'l10',txt:'Limpe 10 linhas',ok:e=>e.linhas>=10},
+  {id:'dupla',txt:'Limpe 2 linhas de uma vez',ok:e=>e.maior>=2},
+  {id:'tripla',txt:'Limpe 3 linhas de uma vez',ok:e=>e.maior>=3},
+  {id:'quad',txt:'Faça uma QUÁDRUPLA (4 linhas)',ok:e=>e.maior>=4},
+  {id:'combo3',txt:'Combo de 3 seguidas',ok:e=>e.combo>=3},
+  {id:'n3',txt:'Chegue ao nível 3',ok:e=>e.nivel>=3},
+  {id:'p3000',txt:'Faça 3.000 pontos',ok:e=>e.pts>=3000},
+  {id:'guarda',txt:'Use o Guardar 3 vezes',ok:e=>e.guardou>=3},
+  {id:'giro',txt:'Limpe uma linha com giro em T',ok:e=>e.giroT},
+  {id:'limpo',txt:'Deixe o tabuleiro vazio',ok:e=>e.limpo},
+];
+function novoJogo(){
+  fechar();
+  const missoes=[...MISSOES].sort(()=>Math.random()-.5).slice(0,3).map(m=>({...m,feita:false}));
+  G={ g:Array.from({length:L+OCULTAS},()=>Array(C).fill(null)), saco:[], fila:[], peca:null, guarda:null, guardou:false,
+      pts:0, linhas:0, nivel:1, combo:-1, queda:0, trava:0, travaMov:0, fim:false, pausa:false, efeitos:[], limpando:null, t:0, ultGiro:false,
+      ev:{linhas:0,maior:0,combo:0,nivel:1,pts:0,guardou:0,giroT:false,limpo:false}, missoes };
+  for(let k=0;k<4;k++) G.fila.push(proxDoSaco());
+  novaPeca(); hud(); hudMis(); desenhaLados();
+}
+function proxDoSaco(){ if(!G.saco.length){ G.saco=[...TIPOS].sort(()=>Math.random()-.5); } return G.saco.pop(); }
+function novaPeca(tipo){
+  tipo=tipo||G.fila.shift(); if(G.fila.length<4) G.fila.push(proxDoSaco());
+  G.peca={tipo, rot:0, x:3, y:OCULTAS-1};
+  G.trava=0; G.travaMov=0; G.ultGiro=false;
+  if(colide(G.peca,0,0,0)){ fimDeJogo(); return; }
+  desenhaLados();
+}
+const celulas=(p,rot=p.rot)=>giraMatriz(PECAS[p.tipo].m,p.tipo,rot).map(([x,y])=>[p.x+x,p.y+y]);
+function colide(p,dx,dy,drot){ for(const [x,y] of celulas({...p,x:p.x+dx,y:p.y+dy},p.rot+drot)){ if(x<0||x>=C||y>=L+OCULTAS) return true; if(y>=0&&G.g[y][x]) return true; } return false; }
+function move(dx){ if(!pode()) return; if(!colide(G.peca,dx,0,0)){ G.peca.x+=dx; Som.move(); toqueTrava(); G.ultGiro=false; } }
+function gira(dir=1){ if(!pode()) return; for(const [kx,ky] of CHUTES){ if(!colide(G.peca,kx,ky,dir)){ G.peca.x+=kx; G.peca.y+=ky; G.peca.rot=(G.peca.rot+dir+4)%4; Som.gira(); toqueTrava(); G.ultGiro=true; vibrar(6); return; } } }
+function toqueTrava(){ if(noChao() && G.travaMov<15){ G.trava=0; G.travaMov++; } }
+const noChao=()=>colide(G.peca,0,1,0);
+function desce(manual){ if(!pode()) return false; if(!colide(G.peca,0,1,0)){ G.peca.y++; if(manual){ G.pts+=1; hud(); } G.ultGiro=false; return true; } return false; }
+function cai(){ if(!pode()) return; let n=0; while(!colide(G.peca,0,1,0)){ G.peca.y++; n++; } G.pts+=n*2; Som.cai(); vibrar(15);
+  const xs=celulas(G.peca).map(c=>c[0]); G.efeitos.push({tipo:'rastro',x0:Math.min(...xs),x1:Math.max(...xs),y:G.peca.y,vida:.25,cor:PECAS[G.peca.tipo].c[1]}); travar(); }
+function guardar(){ if(!pode()||G.guardou) return; const t=G.peca.tipo; if(G.guarda){ const g=G.guarda; G.guarda=t; novaPeca(g); } else { G.guarda=t; novaPeca(); } G.guardou=true; G.ev.guardou++; Som.gira(); checaMissoes(); desenhaLados(); }
+const pode=()=>G&&!G.fim&&!G.pausa&&!G.limpando&&G.peca;
+function fantasma(){ let d=0; while(!colide(G.peca,0,d+1,0)) d++; return d; }
+
+function travar(){
+  const p=G.peca, cor=PECAS[p.tipo].c; let acima=true;
+  const giroT = p.tipo==='T' && G.ultGiro && cantosT(p)>=3;
+  for(const [x,y] of celulas(p)){ if(y>=OCULTAS) acima=false; if(y>=0) G.g[y][x]={cor,tipo:p.tipo}; }
+  Som.trava(); G.peca=null; G.guardou=false;
+  if(acima){ fimDeJogo(); return; }
+  const cheias=[]; for(let y=0;y<L+OCULTAS;y++) if(G.g[y].every(Boolean)) cheias.push(y);
+  if(cheias.length){
+    const n=cheias.length; G.combo++;
+    const base=[0,100,300,500,800][n]*G.nivel, bonusT=giroT?400*G.nivel:0, comboB=G.combo>0?50*G.combo*G.nivel:0;
+    const ganho=base+bonusT+comboB; G.pts+=ganho; G.linhas+=n;
+    G.ev.linhas=G.linhas; G.ev.maior=Math.max(G.ev.maior,n); G.ev.combo=Math.max(G.ev.combo,G.combo+1); if(giroT) G.ev.giroT=true;
+    Som.linha(n); vibrar(n>=4?[30,30,30,30,60]:[20,20,30]);
+    grito(n>=4?'QUÁDRUPLA!':giroT?'GIRO EM T!':n===3?'TRIPLA!':n===2?'DUPLA!':G.combo>=2?`COMBO x${G.combo+1}!`:'');
+    for(const y of cheias) for(let x=0;x<C;x++){ const c=G.g[y][x]; for(let k=0;k<3;k++) G.efeitos.push({tipo:'p',x:x+.5,y:y+.5-OCULTAS,vx:(Math.random()-.5)*9,vy:-Math.random()*8,vida:.7,cor:c.cor[k%3]}); }
+    G.efeitos.push({tipo:'txt',txt:'+'+fmt(ganho),x:C/2,y:cheias[0]-OCULTAS,vida:1});
+    G.limpando={linhas:cheias,t:0};
+    const nivelAnt=G.nivel; G.nivel=Math.floor(G.linhas/10)+1; if(G.nivel>nivelAnt){ setTimeout(()=>{ grito('NÍVEL '+G.nivel+'!'); Som.nivel(); },350); }
+  } else { G.combo=-1; novaPeca(); }
+  G.ev.nivel=G.nivel; G.ev.pts=G.pts; hud(); checaMissoes();
+}
+function cantosT(p){ const cx=p.x+1, cy=p.y+1; let n=0; for(const [dx,dy] of [[-1,-1],[1,-1],[-1,1],[1,1]]){ const x=cx+dx,y=cy+dy; if(x<0||x>=C||y>=L+OCULTAS||(y>=0&&G.g[y][x])) n++; } return n; }
+function terminaLimpeza(){
+  const ls=G.limpando.linhas; G.g=G.g.filter((_,y)=>!ls.includes(y)); while(G.g.length<L+OCULTAS) G.g.unshift(Array(C).fill(null));
+  G.limpando=null;
+  if(G.g.every(r=>r.every(c=>!c))){ G.pts+=2000*G.nivel; G.ev.limpo=true; grito('TABULEIRO LIMPO!'); Som.nivel(); hud(); checaMissoes(); }
+  novaPeca();
+}
+const velocidade=()=>Math.max(.05, Math.pow(.8-(G.nivel-1)*.007, G.nivel-1)); // segundos por linha
+
+// ---------- missões e fim ----------
+function checaMissoes(){ G.ev.pts=G.pts; for(const m of G.missoes){ if(!m.feita && m.ok(G.ev)){ m.feita=true; Som.moeda(); toast('🎯 Missão cumprida: '+m.txt); hudMis(); } } }
+function fimDeJogo(){
+  if(G.fim) return; G.fim=true; Som.fim(); vibrar([60,40,60]);
+  const rec=G.pts>S.rec; if(rec) S.rec=G.pts; S.xp+=Math.round(G.pts/10); S.jogos++;
+  const hoje=new Date().toISOString().slice(0,10); S.dia[hoje]=Math.max(S.dia[hoje]||0,G.pts); salvar();
+  const feitas=G.missoes.filter(m=>m.feita).length;
+  setTimeout(()=>{ modal(`<h2>Fim de jogo</h2><div class="grande">${fmt(G.pts)}</div>
+    <p>${rec?'🏆 Novo recorde!':'Recorde: '+fmt(S.rec)}</p><p>${G.linhas} linhas · nível ${G.nivel}</p>
+    <span class="moedas">🎯 ${feitas}/3 missões</span>
+    <div class="lmis">${G.missoes.map(m=>`<div>${m.feita?'✅':'⬜'} ${m.txt}</div>`).join('')}</div>
+    <button class="btn verde" id="m-novo">Jogar de novo</button><button class="btn zap" id="m-des">Desafiar um amigo</button><button class="btn sec" id="m-sair">Voltar aos jogos</button>`);
+    $('m-novo').onclick=novoJogo; $('m-sair').onclick=()=>location.href='../index.html';
+    $('m-des').onclick=()=>{ const txt=`Fiz ${fmt(G.pts)} pontos no Blocos em Queda. Consegue passar?`, url=location.origin+location.pathname;
+      if(navigator.share) navigator.share({text:txt,url}).catch(()=>{}); else window.open('https://wa.me/?text='+encodeURIComponent(txt+'\n'+url),'_blank'); };
+    hud(); },600);
+}
+
+// ---------- desenho ----------
+const cv=$('tab'), cx=cv.getContext('2d'); let tam=30;
+function ajusta(){ const r=cv.getBoundingClientRect(), dpr=Math.min(2,devicePixelRatio||1); tam=r.width/C; cv.width=Math.round(r.width*dpr); cv.height=Math.round(r.height*dpr); cx.setTransform(dpr,0,0,dpr,0,0); }
+function bloco(c,x,y,s,cor,alfa=1){
+  c.globalAlpha=alfa; const g=c.createLinearGradient(x,y,x+s,y+s); g.addColorStop(0,cor[0]); g.addColorStop(.5,cor[1]); g.addColorStop(1,cor[2]);
+  c.fillStyle=g; c.beginPath(); c.roundRect(x+1,y+1,s-2,s-2,s*.18); c.fill();
+  c.fillStyle='rgba(255,255,255,.35)'; c.beginPath(); c.roundRect(x+s*.16,y+s*.12,s*.68,s*.2,s*.1); c.fill();
+  c.strokeStyle='rgba(0,0,0,.35)'; c.lineWidth=1; c.beginPath(); c.roundRect(x+1,y+1,s-2,s-2,s*.18); c.stroke();
+  c.globalAlpha=1;
+}
+function desenhar(){
+  const c=cx, s=tam, W=s*C, H=s*L; c.clearRect(0,0,W,H);
+  c.strokeStyle='rgba(255,255,255,.05)'; c.lineWidth=1;
+  for(let x=1;x<C;x++){ c.beginPath(); c.moveTo(x*s,0); c.lineTo(x*s,H); c.stroke(); } for(let y=1;y<L;y++){ c.beginPath(); c.moveTo(0,y*s); c.lineTo(W,y*s); c.stroke(); }
+  if(!G) return;
+  const lim=G.limpando;
+  for(let y=OCULTAS;y<L+OCULTAS;y++) for(let x=0;x<C;x++){ const b=G.g[y][x]; if(!b) continue;
+    if(lim&&lim.linhas.includes(y)){ const k=lim.t/.28; c.fillStyle=`rgba(255,255,255,${1-k})`; c.fillRect(x*s,(y-OCULTAS)*s,s,s); if(k<.5) bloco(c,x*s,(y-OCULTAS)*s,s,b.cor,1-k*2); continue; }
+    bloco(c,x*s,(y-OCULTAS)*s,s,b.cor); }
+  if(G.peca&&!G.fim){ const p=G.peca, cor=PECAS[p.tipo].c, d=fantasma();
+    for(const [x,y] of celulas(p)){ const yy=y+d-OCULTAS; if(yy>=0){ c.strokeStyle=cor[0]; c.lineWidth=2; c.globalAlpha=.55; c.beginPath(); c.roundRect(x*s+3,yy*s+3,s-6,s-6,s*.15); c.stroke(); c.globalAlpha=.12; c.fillStyle=cor[1]; c.fillRect(x*s+3,yy*s+3,s-6,s-6); c.globalAlpha=1; } }
+    const brilho=G.trava>0?.75+Math.sin(G.t*30)*.25:1;
+    for(const [x,y] of celulas(p)) if(y>=OCULTAS) bloco(c,x*s,(y-OCULTAS)*s,s,cor,brilho); }
+  for(const e of G.efeitos){
+    if(e.tipo==='p'){ c.globalAlpha=Math.max(0,e.vida/.7); c.fillStyle=e.cor; c.fillRect(e.x*s-3,e.y*s-3,6,6); c.globalAlpha=1; }
+    if(e.tipo==='rastro'){ c.fillStyle=e.cor; c.globalAlpha=e.vida/.25*.35; c.fillRect(e.x0*s,0,(e.x1-e.x0+1)*s,(e.y-OCULTAS+2)*s); c.globalAlpha=1; }
+    if(e.tipo==='txt'){ c.globalAlpha=Math.min(1,e.vida*2); c.font=`900 ${s*.9}px system-ui`; c.textAlign='center'; c.lineWidth=4; c.strokeStyle='rgba(0,0,0,.6)'; const yy=(e.y-(1-e.vida)*2)*s; c.strokeText(e.txt,e.x*s,yy); c.fillStyle='#ffd23f'; c.fillText(e.txt,e.x*s,yy); c.globalAlpha=1; }
+  }
+  if(G.pausa&&!G.fim){ c.fillStyle='rgba(5,4,20,.7)'; c.fillRect(0,0,W,H); c.fillStyle='#fff'; c.font=`900 ${s}px system-ui`; c.textAlign='center'; c.fillText('PAUSA',W/2,H/2); }
+}
+function mini(id,tipo){ const c=$(id), g=c.getContext('2d'); g.clearRect(0,0,c.width,c.height); if(!tipo) return;
+  const m=PECAS[tipo].m, s=Math.min(c.width/4.4,c.height/2.6), xs=m.map(p=>p[0]), ys=m.map(p=>p[1]);
+  const w=(Math.max(...xs)-Math.min(...xs)+1)*s, h=(Math.max(...ys)-Math.min(...ys)+1)*s, ox=(c.width-w)/2-Math.min(...xs)*s, oy=(c.height-h)/2-Math.min(...ys)*s;
+  for(const [x,y] of m) bloco(g,ox+x*s,oy+y*s,s,PECAS[tipo].c); }
+function desenhaLados(){ if(!G) return; mini('c-guarda',G.guarda); $('guarda-cx').classList.toggle('usado',G.guardou); for(let k=0;k<3;k++) mini('c-p'+k,G.fila[k]); }
+function hud(){ if(!G) return; $('h-pts').textContent=fmt(G.pts); $('h-lin').textContent=G.linhas; $('h-niv').textContent=G.nivel; $('h-nbar').style.width=(G.linhas%10)*10+'%';
+  $('h-combo').textContent=G.combo>0?'x'+(G.combo+1):'–'; $('h-rec').textContent='🏆 '+fmt(Math.max(S.rec,G.pts)); $('h-som').textContent=S.som?'🔊':'🔇'; }
+function hudMis(){ $('h-mis').innerHTML=G.missoes.map(m=>`<span class="mis ${m.feita?'ok':''}">${m.feita?'✓':'🎯'} ${m.txt}</span>`).join(''); }
+let toastT; function toast(t){ const e=$('toast'); e.textContent=t; e.classList.add('on'); clearTimeout(toastT); toastT=setTimeout(()=>e.classList.remove('on'),2000); }
+function grito(t){ if(!t) return; const g=document.createElement('div'); g.className='grito'; g.textContent=t; document.body.appendChild(g); setTimeout(()=>g.remove(),1100); }
+function modal(h){ $('mbox').innerHTML=h; $('modal').hidden=false; }
+function fechar(){ $('modal').hidden=true; }
+
+// ---------- laço ----------
+const TRAVA=.5; let ult=performance.now();
+function quadro(t){
+  const dt=Math.min(.05,(t-ult)/1000); ult=t;
+  if(G&&!G.pausa){ G.t+=dt;
+    if(G.limpando){ G.limpando.t+=dt; if(G.limpando.t>=.28) terminaLimpeza(); }
+    else if(G.peca&&!G.fim){
+      if(segura.desce){ segura.dt+=dt; if(segura.dt>.04){ segura.dt=0; desce(true); } }
+      if(segura.lado){ segura.lt+=dt; if(segura.lt>.17){ segura.lr+=dt; if(segura.lr>.05){ segura.lr=0; move(segura.lado); } } }
+      if(noChao()){ G.trava+=dt; if(G.trava>=TRAVA) travar(); }
+      else { G.queda+=dt; if(G.queda>=velocidade()){ G.queda=0; desce(false); } }
+    }
+    for(const e of G.efeitos){ e.vida-=dt; if(e.tipo==='p'){ e.vy+=20*dt; e.x+=e.vx*dt; e.y+=e.vy*dt; } } G.efeitos=G.efeitos.filter(e=>e.vida>0);
+  }
+  desenhar(); estrelas(t); requestAnimationFrame(quadro);
+}
+
+// ---------- fundo animado ----------
+const ec=$('estrelas'), eg=ec.getContext('2d'); const pontos=Array.from({length:70},()=>({x:Math.random(),y:Math.random(),v:.01+Math.random()*.03,r:Math.random()*1.6+.4,tipo:Math.floor(Math.random()*7)}));
+function estrelas(t){ const w=innerWidth,h=innerHeight; if(ec.width!==w||ec.height!==h){ ec.width=w; ec.height=h; } eg.clearRect(0,0,w,h);
+  for(const p of pontos){ p.y+=p.v*.016; if(p.y>1.05){ p.y=-.05; p.x=Math.random(); } const a=.3+.5*Math.abs(Math.sin(t/900+p.x*20));
+    if(p.r>1.5){ eg.globalAlpha=a*.35; bloco(eg,p.x*w,p.y*h,10,PECAS[TIPOS[p.tipo]].c); eg.globalAlpha=1; } else { eg.fillStyle=`rgba(255,255,255,${a})`; eg.fillRect(p.x*w,p.y*h,p.r,p.r); } } }
+
+// ---------- controles ----------
+const segura={desce:0,dt:0,lado:0,lt:0,lr:0};
+function botao(id,ao,solto){ const b=$(id); b.addEventListener('pointerdown',e=>{ e.preventDefault(); Som.init(); try{ b.setPointerCapture(e.pointerId); }catch(_){} b.classList.add('on'); ao(); });
+  const f=()=>{ b.classList.remove('on'); solto&&solto(); }; b.addEventListener('pointerup',f); b.addEventListener('pointercancel',f); b.addEventListener('lostpointercapture',f); }
+botao('k-esq',()=>{ move(-1); segura.lado=-1; segura.lt=0; segura.lr=0; },()=>{ if(segura.lado===-1) segura.lado=0; });
+botao('k-dir',()=>{ move(1); segura.lado=1; segura.lt=0; segura.lr=0; },()=>{ if(segura.lado===1) segura.lado=0; });
+botao('k-gira',()=>gira(1)); botao('k-cai',()=>cai());
+botao('k-desce',()=>{ desce(true); segura.desce=1; segura.dt=0; },()=>segura.desce=0);
+$('guarda-cx').addEventListener('pointerdown',e=>{ e.preventDefault(); Som.init(); guardar(); });
+// gestos no tabuleiro: tocar = girar, arrastar = mover, deslizar para baixo = cair
+let toque=null;
+cv.addEventListener('pointerdown',e=>{ Som.init(); toque={x:e.clientX,y:e.clientY,t:performance.now(),mx:0,moveu:false}; try{ cv.setPointerCapture(e.pointerId); }catch(_){} });
+cv.addEventListener('pointermove',e=>{ if(!toque) return; const dx=e.clientX-toque.x, passo=tam*.9; while(dx-toque.mx>passo){ move(1); toque.mx+=passo; toque.moveu=true; } while(toque.mx-dx>passo){ move(-1); toque.mx-=passo; toque.moveu=true; } });
+cv.addEventListener('pointerup',e=>{ if(!toque) return; const dy=e.clientY-toque.y, dx=e.clientX-toque.x, dtm=performance.now()-toque.t;
+  if(dy>tam*2.2 && dy>Math.abs(dx)*1.5 && dtm<400) cai(); else if(dy<-tam*2 && Math.abs(dy)>Math.abs(dx)) guardar(); else if(!toque.moveu && Math.abs(dx)<10 && Math.abs(dy)<10) gira(1); toque=null; });
+addEventListener('keydown',e=>{ if(!G) return; Som.init();
+  const k=e.code; if(['ArrowLeft','ArrowRight','ArrowDown','ArrowUp','Space'].includes(k)) e.preventDefault();
+  if(k==='ArrowLeft'||k==='KeyA') move(-1); else if(k==='ArrowRight'||k==='KeyD') move(1);
+  else if(k==='ArrowDown'||k==='KeyS') desce(true); else if(k==='ArrowUp'||k==='KeyX'||k==='KeyW') gira(1); else if(k==='KeyZ') gira(-1);
+  else if(k==='Space') cai(); else if(k==='KeyC'||k==='ShiftLeft'||k==='ShiftRight') guardar(); else if(k==='KeyP'||k==='Escape') pausar(); });
+function pausar(){ if(!G||G.fim) return; G.pausa=!G.pausa; $('h-pausa').textContent=G.pausa?'▶':'⏸'; if(G.pausa) modal(`<h2>Pausa</h2><ul class="regras">
+  <li>Encaixe as peças e complete <b>linhas inteiras</b> para limpar.</li><li>Várias linhas de uma vez valem muito mais. Limpar em sequência dá <b>combo</b>.</li>
+  <li><b>Toque</b> no tabuleiro para girar, <b>arraste</b> para mover, <b>deslize para baixo</b> para cair, <b>para cima</b> para guardar.</li>
+  <li>Teclado: ← → mover · ↑ girar · ↓ descer · espaço cair · C guardar.</li></ul>
+  <button class="btn verde" id="m-cont">Continuar</button><button class="btn" id="m-novo">Recomeçar</button><button class="btn sec" id="m-sair">Voltar aos jogos</button>`);
+  if(G.pausa){ $('m-cont').onclick=()=>{ G.pausa=false; $('h-pausa').textContent='⏸'; fechar(); }; $('m-novo').onclick=novoJogo; $('m-sair').onclick=()=>location.href='../index.html'; } else fechar(); }
+$('h-pausa').onclick=pausar; $('h-som').onclick=()=>{ S.som=!S.som; salvar(); hud(); };
+addEventListener('resize',ajusta); if(window.visualViewport) visualViewport.addEventListener('resize',ajusta);
+document.addEventListener('visibilitychange',()=>{ if(document.hidden&&G&&!G.pausa&&!G.fim) pausar(); });
+
+$('rodape').textContent=`${CONFIG.SISTEMA} v${CONFIG.VERSAO}•Desenvolvido por ${CONFIG.DESENVOLVEDOR}`;
+ajusta(); novoJogo(); requestAnimationFrame(quadro);
+if(!S.jogos){ G.pausa=true; modal(`<h2>Blocos em Queda</h2><ul class="regras">
+  <li>As peças caem. Encaixe e complete <b>linhas inteiras</b>.</li><li>Quanto mais linhas de uma vez, mais pontos: até a <b>QUÁDRUPLA</b>!</li>
+  <li>A cada 10 linhas o <b>nível</b> sobe e as peças caem mais rápido.</li><li>Cumpra as <b>3 missões</b> de cada partida.</li>
+  <li><b>Toque</b> para girar, <b>arraste</b> para mover, <b>deslize para baixo</b> para cair.</li></ul>
+  <button class="btn verde" id="m-ok">Começar!</button>`); $('m-ok').onclick=()=>{ Som.init(); G.pausa=false; fechar(); }; }
+</script>
+</body>
+</html>

@@ -95,6 +95,16 @@ button{font-family:inherit;color:inherit;border:0;cursor:pointer;background:none
 .gc.bloq canvas{filter:brightness(0) opacity(.15)}
 .regras{text-align:left;font-size:14px;line-height:1.5;margin-top:8px}
 .regras li{margin:4px 0 4px 18px}
+.perdidos{margin:8px 12px 0;background:#fff;border-radius:16px;padding:8px 10px;box-shadow:0 3px 0 rgba(91,70,54,.1)}
+.ptit{font-weight:800;font-size:13px}
+.ptit a{color:#4fb3aa}
+.plista{display:flex;gap:8px;margin-top:6px;overflow-x:auto}
+.pitem{flex:0 0 auto;width:78px;background:#fdf3e7;border-radius:12px;padding:4px;font-size:10px;font-weight:800;line-height:1.15}
+.pitem canvas{display:block;width:40px;height:40px;margin:0 auto 2px;filter:brightness(0) opacity(.18)}
+.pitem.ok{background:#e3f6ee}
+.pitem.ok canvas{filter:none}
+.itens{flex-shrink:0}
+#t-casa{overflow-y:auto}
 footer{text-align:center;font-size:10px;opacity:.55;padding-bottom:4px}
 </style>
 </head>
@@ -113,6 +123,7 @@ footer{text-align:center;font-size:10px;opacity:.55;padding-bottom:4px}
     <div class="abas" id="abas"></div>
     <div class="progresso"><i id="prog"></i></div>
     <div class="itens" id="itens"></div>
+    <div class="perdidos" id="perdidos"></div>
     <div class="rodape-casa">
       <button class="btn sec mini" id="b-gatos">🐱</button>
       <button class="btn ouro" id="b-jogar">Jogar fase 1<small>ganhe ⭐ para decorar</small></button>

@@ -1,5 +1,5 @@
 // Lar dos Gatinhos — jogar, decorar, colecionar
-const CONFIG = { SISTEMA:'Lar dos Gatinhos', VERSAO:'0.1.0.0', DESENVOLVEDOR:'Vettore Sistemas' };
+const CONFIG = { SISTEMA:'Lar dos Gatinhos', VERSAO:'0.2.0.0', DESENVOLVEDOR:'Vettore Sistemas' };
 const $=id=>document.getElementById(id);
 const fmt=n=>Math.round(n).toLocaleString('pt-BR');
 const ICONES=['🍓','🍊','🍋','🍉','🍇','🍑','🌸','🌻','🌷','🐾','🧶','🐟','🍪','☕','🧁','🥛'];
@@ -8,8 +8,8 @@ const PRECO={desf:20, ima:40, mist:30, volta3:30};
 
 // ---------- Save ----------
 const SK='lar_gatinhos_v1';
-const PADRAO={fase:1, estrelas:0, moedas:50, comprados:{}, gatos:[], som:true, comodo:0, viu:false};
-let S; try{ S=Object.assign({},PADRAO,JSON.parse(localStorage.getItem(SK)||'{}')); }catch(e){ S={...PADRAO}; }
+const PADRAO={fase:1, estrelas:0, moedas:50, comprados:{}, gatos:[], som:true, comodo:0, viu:false, creditados:[]};
+let S; try{ S=Object.assign({},PADRAO,JSON.parse(localStorage.getItem(SK)||'{}')); if(!Array.isArray(S.creditados)) S.creditados=[]; }catch(e){ S={...PADRAO}; }
 const salvar=()=>{ try{ localStorage.setItem(SK,JSON.stringify(S)); }catch(e){} };
 const comp=id=>S.comprados[id]||(S.comprados[id]=[]);
 
@@ -215,6 +215,11 @@ function telaCasa(){
   $('abas').innerHTML=COMODOS.map((x,i)=>`<button class="aba ${i===S.comodo?'on':''} ${comodoLiberado(i)?'':'bloq'}" data-i="${i}">${comodoLiberado(i)?'':'🔒 '}${x.nome}</button>`).join('');
   $('itens').innerHTML=cm.itens.map(it=>{ const f=c.includes(it.id); return `<button class="item ${f?'feito':''} ${!f&&S.estrelas>=it.custo?'pode':''}" data-id="${it.id}"><span class="ic">${it.ic}</span>${it.nome}<br><span class="preco">${f?'✓':'⭐ '+it.custo}</span></button>`; }).join('');
   $('prog').style.width=(c.length/cm.itens.length*100)+'%';
+  const ach=perdidosAchados(), perdCm=PERDIDOS.filter(q=>q.comodo===cm.id);
+  $('perdidos').innerHTML = `<div class="ptit">🔍 Itens perdidos · achados no <a href="../familia/index.html">Família em Ação</a> <b>${PERDIDOS.filter(q=>ach.includes(q.id)).length}/${PERDIDOS.length}</b></div>
+    <div class="plista">${perdCm.map(q=>{ const ok=ach.includes(q.id); return `<button class="pitem ${ok?'ok':''}" data-p="${q.id}"><canvas width="80" height="80"></canvas><span>${ok?q.nome:'Fase '+q.fase}</span></button>`; }).join('')}</div>`;
+  $('perdidos').querySelectorAll('.pitem').forEach(b=>{ const q=PERDIDOS.find(x=>x.id===b.dataset.p), cc=b.querySelector('canvas').getContext('2d'); cc.setTransform(2,0,0,2,0,0); cc.translate(5,34); q.d(cc,0,0);
+    b.onclick=()=>{ if(ach.includes(q.id)) fala(`${q.nome} de volta em casa! 💖`); else toast(`Ache na Família em Ação, fase ${q.fase}`); }; });
   const barato=cm.itens.filter(it=>!c.includes(it.id)).sort((a,b)=>a.custo-b.custo)[0];
   const host=(S.gatos[0] && GATOS.find(g=>g.id===S.gatos[0]).nome) || 'Gatinho';
   fala( !barato ? `${cm.nome} pronta! Miau! 💖` : S.estrelas>=barato.custo ? `Temos ⭐! Que tal ${barato.nome.toLowerCase()}?` : `Vamos jogar e ganhar ⭐ para a ${cm.nome.toLowerCase()}!`, host);
@@ -295,5 +300,20 @@ $('casa').addEventListener('pointerdown',()=>{ Som.init(); Som.miau(); fala(['Mi
 addEventListener('resize',()=>{ if(J&&$('t-jogo').classList.contains('on')){ desenhaTab(); layoutBandeja(); } });
 $('rodape').textContent=`${CONFIG.SISTEMA} v${CONFIG.VERSAO}•Desenvolvido por ${CONFIG.DESENVOLVEDOR}`;
 $('b-som').textContent=S.som?'🔊':'🔇';
+// créditos: cada item perdido achado na Família vale +2 ⭐ aqui
+function creditaPerdidos(){
+  const novos=perdidosAchados().filter(id=>PERDIDOS.some(q=>q.id===id) && !S.creditados.includes(id));
+  if(!novos.length) return false;
+  S.creditados.push(...novos); S.estrelas+=novos.length*2; salvar();
+  const nomes=novos.map(id=>PERDIDOS.find(q=>q.id===id).nome);
+  const prim=PERDIDOS.find(q=>q.id===novos[0]); S.comodo=Math.max(0,COMODOS.findIndex(c=>c.id===prim.comodo)); if(!comodoLiberado(S.comodo)) S.comodo=0; salvar();
+  telaCasa(); Som.compra();
+  modal(`<h2>A família achou!</h2><p style="font-size:44px">📦</p><p>${nomes.map(n=>'<b>'+n+'</b>').join(', ')} ${novos.length>1?'voltaram':'voltou'} para casa.</p>
+    <div class="premio"><span>+${novos.length*2} ⭐</span></div><button class="btn ouro" id="m-ok">Ver na casa 🏠</button>`);
+  $('m-ok').onclick=()=>{ fecharModal(); telaCasa(); };
+  return true;
+}
 telaCasa();
-if(!S.viu){ S.viu=true; salvar(); regras(); }
+const creditou=creditaPerdidos();
+addEventListener('pageshow',()=>{ if(!$('t-jogo').classList.contains('on')) creditaPerdidos(); });
+if(!creditou && !S.viu){ S.viu=true; salvar(); regras(); }
