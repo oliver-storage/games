@@ -85,7 +85,7 @@ footer{position:fixed;bottom:2px;left:0;right:0;text-align:center;font-size:10px
 <script src="../lib/three.min.js"></script>
 <script>
 // Desenrola 3D — Vettore Sistemas
-const CONFIG = { SISTEMA:'Desenrola 3D', VERSAO:'0.1.1.0', DESENVOLVEDOR:'Vettore Sistemas' };
+const CONFIG = { SISTEMA:'Desenrola 3D', VERSAO:'0.1.2.0', DESENVOLVEDOR:'Vettore Sistemas' };
 const $=id=>document.getElementById(id);
 const fmt=n=>Math.round(n).toLocaleString('pt-BR');
 const CORES=['#ff4d6a','#1fb5ff','#ffd93b','#2ecc71','#b56bff','#ff9f1c','#ff5fd2','#00d2c6'];
@@ -253,7 +253,9 @@ function enquadrar(cam, renderer, alvo, semiX, semiZ, yMin, yMax, elev, folga){
   let L=8, R=w-8, T=hud.bottom+6, B=h-8;
   if(base.width < w*.5){ R=Math.min(R, base.left-8); } else { B=Math.min(B, base.top-6); }
   if(base.width < w*.5 && hud.width < w*.6){ T=8; L=Math.max(L, hud.right+8); }
-  const aw=Math.max(60,R-L), ah=Math.max(60,B-T), acx=(L+R)/2, acy=(T+B)/2;
+  // centro da tela: mesma folga em cima/embaixo e dos dois lados
+  const mv=Math.max(T,h-B), mh=Math.max(L,w-R); T=mv; B=h-mv; L=mh; R=w-mh;
+  const aw=Math.max(60,R-L), ah=Math.max(60,B-T), acx=w/2, acy=h/2;
   const dir=new THREE.Vector3(0, Math.sin(elev), Math.cos(elev));
   const cantos=[]; for(const x of [-semiX,semiX]) for(const y of [yMin,yMax]) for(const z of [-semiZ,semiZ]) cantos.push(new THREE.Vector3(alvo.x+x, y, alvo.z+z));
   const caixa=()=>{ let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9; const v=new THREE.Vector3();
@@ -265,6 +267,8 @@ function enquadrar(cam, renderer, alvo, semiX, semiZ, yMin, yMax, elev, folga){
     const b=caixa(); const s=Math.max((b.x1-b.x0)/(aw*folga), (b.y1-b.y0)/(ah*folga)); D*=s; if(Math.abs(s-1)<.01) break;
   }
   cam.position.copy(alvo).addScaledVector(dir,D); cam.lookAt(alvo); cam.updateProjectionMatrix(); cam.updateMatrixWorld();
+  // centraliza pela superfície do tabuleiro (sem contar a altura das peças)
+  cantos.length=0; for(const x of [-semiX,semiX]) for(const z of [-semiZ,semiZ]) cantos.push(new THREE.Vector3(alvo.x+x,0,alvo.z+z));
   const b=caixa(); cam.setViewOffset(w,h,(b.x0+b.x1)/2-acx,(b.y0+b.y1)/2-acy,w,h); cam.updateProjectionMatrix();
 }
 function pontoNDC(e, canvas, ptr){ const r=canvas.getBoundingClientRect(); ptr.x=(e.clientX-r.left)/r.width*2-1; ptr.y=-((e.clientY-r.top)/r.height)*2+1; }
