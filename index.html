@@ -3,30 +3,91 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0b1028">
 <title>Jogos</title>
-<link rel="stylesheet" href="style.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{min-height:100%}
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#fff;background:radial-gradient(ellipse at 50% 0%,#24307a 0%,#101640 50%,#070a1f 100%);background-attachment:fixed;overflow-x:hidden}
+#fundo{position:fixed;inset:0;z-index:0;pointer-events:none}
+.app{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:22px 16px 30px}
+h1{text-align:center;font-size:clamp(40px,8vw,64px);font-weight:900;letter-spacing:6px;background:linear-gradient(90deg,#ff5fa8,#ffd23f,#3ddc84,#46a8ff,#b56bff,#ff5fa8);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:arco 6s linear infinite;filter:drop-shadow(0 4px 0 rgba(0,0,0,.35))}
+@keyframes arco{to{background-position:200% 0}}
+.sub{text-align:center;color:#b9c4ef;margin:6px 0 26px;font-size:15px}
+.grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:28px 22px;perspective:900px}
+@media (max-width:420px){ .grade{grid-template-columns:repeat(2,1fr);gap:24px 16px} }
+.cubo{display:block;aspect-ratio:1;text-decoration:none;color:#fff;position:relative;perspective:700px;outline:none}
+.c3d{position:absolute;inset:0;transform-style:preserve-3d;transform:translateZ(calc(var(--s)*-.5)) rotateX(var(--rx,-14deg)) rotateY(var(--ry,22deg));transition:transform .7s cubic-bezier(.34,1.4,.64,1);animation:flutua var(--dur,6s) ease-in-out infinite;animation-delay:var(--atraso,0s)}
+@keyframes flutua{0%,100%{translate:0 0}50%{translate:0 -10px}}
+.face{position:absolute;inset:0;border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:10px;backface-visibility:hidden;-webkit-backface-visibility:hidden;border:2px solid rgba(255,255,255,.35);overflow:hidden}
+.face::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.35) 0%,rgba(255,255,255,0) 45%);pointer-events:none}
+.frente{transform:translateZ(calc(var(--s)*.5));background:linear-gradient(145deg,var(--c1),var(--c2));box-shadow:inset 0 -8px 0 rgba(0,0,0,.18)}
+.direita{transform:rotateY(90deg) translateZ(calc(var(--s)*.5));background:linear-gradient(145deg,var(--c2),var(--c3))}
+.topo{transform:rotateX(90deg) translateZ(calc(var(--s)*.5));background:linear-gradient(145deg,var(--c1),var(--c2));filter:brightness(1.25)}
+.tras,.esquerda,.baixo{background:var(--c3)}
+.tras{transform:rotateY(180deg) translateZ(calc(var(--s)*.5))}
+.esquerda{transform:rotateY(-90deg) translateZ(calc(var(--s)*.5))}
+.baixo{transform:rotateX(-90deg) translateZ(calc(var(--s)*.5))}
+.ic{font-size:calc(var(--s)*.38);line-height:1;filter:drop-shadow(0 6px 6px rgba(0,0,0,.35));animation:pulsa 2.6s ease-in-out infinite;animation-delay:var(--atraso,0s)}
+@keyframes pulsa{50%{transform:scale(1.1) rotate(-4deg)}}
+.nome{margin-top:8px;font-weight:900;font-size:clamp(13px,calc(var(--s)*.1),17px);line-height:1.15;text-shadow:0 2px 0 rgba(0,0,0,.35)}
+.desc{font-size:clamp(11px,calc(var(--s)*.075),13px);font-weight:700;line-height:1.3;text-shadow:0 1px 0 rgba(0,0,0,.35)}
+.jogar{margin-top:8px;background:rgba(255,255,255,.95);color:#1d1452;font-weight:900;font-size:13px;padding:5px 12px;border-radius:12px}
+.novo{position:absolute;top:8px;right:8px;background:#ffd23f;color:#5a2a00;font-size:10px;font-weight:900;padding:3px 7px;border-radius:8px;letter-spacing:.5px}
+.sombra{position:absolute;left:12%;right:12%;bottom:-16px;height:14px;border-radius:50%;background:radial-gradient(rgba(0,0,0,.45),rgba(0,0,0,0) 70%);animation:sombra var(--dur,6s) ease-in-out infinite;animation-delay:var(--atraso,0s)}
+@keyframes sombra{50%{transform:scale(.85);opacity:.6}}
+@media (hover:hover){ .cubo:hover .c3d,.cubo:focus .c3d{--rx:-8deg;--ry:-70deg} }
+.cubo:active .c3d{--rx:-6deg;--ry:-70deg}
+footer{position:relative;z-index:1;text-align:center;font-size:11px;color:#8c97c4;padding:10px}
+</style>
 </head>
 <body>
+<canvas id="fundo"></canvas>
 <div class="app">
-  <section class="tela on">
-    <h1>JO<span>GOS</span></h1>
-    <p class="sub">Partidas rápidas. Desafie um amigo pelo WhatsApp e joguem juntos.</p>
-    <div class="cards">
-      <a class="card" href="queda/index.html"><div class="ic">🟪</div><div><b>Blocos em Queda</b><small>Encaixe as peças, complete linhas e faça combos. Missões e níveis.</small></div></a>
-      <a class="card" href="gatinhos/index.html"><div class="ic">🐱</div><div><b>Lar dos Gatinhos</b><small>Junte 3 peças iguais, ganhe estrelas, decore a casa e colecione gatinhos. Itens achados no Família em Ação também enfeitam a casa.</small></div></a>
-      <a class="card" href="linhas/index.html"><div class="ic">🔴</div><div><b>Linha de Cores 3D</b><small>Alinhe 5 bolas da mesma cor num tabuleiro 3D. Missões, coringa e combos.</small></div></a>
-      <a class="card" href="desenrola/index.html"><div class="ic">🪢</div><div><b>Desenrola 3D</b><small>Mova as pontas das cordas até nenhuma cruzar a outra. 60 fases.</small></div></a>
-      <a class="card" href="familia/index.html"><div class="ic">👨‍👩‍👧</div><div><b>Família em Ação</b><small>Aventura: monte sua família, use força, proteção e encolher e ache os itens perdidos da casa.</small></div></a>
-      <a class="card" href="febre/index.html"><div class="ic">🍬</div><div><b>Febre Doces</b><small>Campanha com 40 fases de estourar docinhos, especiais e conquistas.</small></div></a>
-      <a class="card" href="corre.html"><div class="ic">🦎</div><div><b>Calu Corre</b><small>Pule cactos com o Calu pelo sertão e pegue castanhas.</small></div></a>
-      <a class="card" href="nave.html"><div class="ic">🚀</div><div><b>Chuva de Meteoros</b><small>Arcade: 60 segundos de meteoros e um chefão no final.</small></div></a>
-      <a class="card" href="blocos.html"><div class="ic">🧩</div><div><b>Estoura Blocos</b><small>Versão rápida: estoure grupos de blocos iguais em 30 jogadas.</small></div></a>
-      <a class="card" href="dupla.html"><div class="ic">➕</div><div><b>Dupla</b><small>Some dois números e bata o alvo em 60 segundos.</small></div></a>
-    </div>
-  </section>
+  <h1>JOGOS</h1>
+  <p class="sub">Escolha um cubo e divirta-se! Desafie os amigos pelo WhatsApp.</p>
+  <div class="grade" id="grade"></div>
 </div>
 <footer id="rodape"></footer>
 <script src="core.js"></script>
-<script>$('rodape').textContent = `Jogos v${CONFIG.VERSAO}•Desenvolvido por ${CONFIG.DESENVOLVEDOR}`;</script>
+<script>
+const JOGOS=[
+  {url:'queda/index.html',ic:'🟪',nome:'Blocos em Queda',desc:'Encaixe as peças, complete linhas e faça combos.',cor:['#b56bff','#7b3fe0','#4a1f9c'],novo:1},
+  {url:'gatinhos/index.html',ic:'🐱',nome:'Lar dos Gatinhos',desc:'Junte 3 iguais, decore a casa e colecione gatinhos.',cor:['#ffb3cf','#ff6fa5','#c23d74']},
+  {url:'linhas/index.html',ic:'🔴',nome:'Linha de Cores 3D',desc:'Alinhe 5 bolas da mesma cor. Coringa e combos.',cor:['#ff8a7a','#ff4d5e','#a31d2c']},
+  {url:'desenrola/index.html',ic:'🪢',nome:'Desenrola 3D',desc:'Mova as cordas até nenhuma cruzar a outra.',cor:['#ffc38a','#ff8a3d','#b0501a']},
+  {url:'familia/index.html',ic:'👨‍👩‍👧',nome:'Família em Ação',desc:'Força, proteção e encolher para sair do videogame.',cor:['#7fd4ff','#2e86de','#15508a']},
+  {url:'febre/index.html',ic:'🍬',nome:'Febre Doces',desc:'40 fases de estourar docinhos e conquistas.',cor:['#ff9ad8','#e04fc8','#8a1d78']},
+  {url:'corre.html',ic:'🦎',nome:'Calu Corre',desc:'Pule cactos pelo sertão e pegue castanhas.',cor:['#ffe08a','#f2a31b','#a3610a']},
+  {url:'nave.html',ic:'🚀',nome:'Chuva de Meteoros',desc:'60 segundos de meteoros e um chefão.',cor:['#8aa0ff','#4d5bd6','#232a8a']},
+  {url:'blocos.html',ic:'🧩',nome:'Estoura Blocos',desc:'Estoure grupos de blocos em 30 jogadas.',cor:['#9ff0b0','#2ecc71','#178a4a']},
+  {url:'dupla.html',ic:'➕',nome:'Dupla',desc:'Some dois números e bata o alvo.',cor:['#8af0e6','#1fb5a6','#0b6a62']},
+];
+const grade=document.getElementById('grade');
+grade.innerHTML=JOGOS.map((j,i)=>`<a class="cubo" href="${j.url}" style="--c1:${j.cor[0]};--c2:${j.cor[1]};--c3:${j.cor[2]};--atraso:${(i*.37)%3}s;--dur:${5+(i%4)}s">
+  <div class="c3d">
+    <div class="face frente">${j.novo?'<span class="novo">NOVO</span>':''}<div class="ic">${j.ic}</div><div class="nome">${j.nome}</div></div>
+    <div class="face direita"><div class="desc">${j.desc}</div><span class="jogar">▶ Jogar</span></div>
+    <div class="face topo"></div><div class="face tras"></div><div class="face esquerda"></div><div class="face baixo"></div>
+  </div><div class="sombra"></div></a>`).join('');
+// tamanho real de cada cubo (profundidade 3D)
+function medir(){ grade.querySelectorAll('.cubo').forEach(c=>c.style.setProperty('--s',c.offsetWidth+'px')); }
+addEventListener('resize',medir); medir();
+// inclinação suave seguindo o mouse/celular
+let ax=0, ay=0;
+addEventListener('pointermove',e=>{ ax=(e.clientX/innerWidth-.5)*16; ay=(e.clientY/innerHeight-.5)*-10; aplicaInclina(); });
+addEventListener('deviceorientation',e=>{ if(e.gamma==null) return; ax=Math.max(-12,Math.min(12,e.gamma*.4)); ay=Math.max(-8,Math.min(8,(e.beta-45)*-.25)); aplicaInclina(); });
+function aplicaInclina(){ grade.querySelectorAll('.cubo:not(:hover) .c3d').forEach((c,i)=>{ c.style.setProperty('--ry',(22+ax)+'deg'); c.style.setProperty('--rx',(-14+ay)+'deg'); }); }
+// fundo: cubinhos coloridos caindo
+const fc=document.getElementById('fundo'), fg=fc.getContext('2d'); const cores=JOGOS.map(j=>j.cor);
+const parts=Array.from({length:40},()=>({x:Math.random(),y:Math.random(),v:.01+Math.random()*.025,s:6+Math.random()*12,r:Math.random()*6,vr:(Math.random()-.5)*.02,c:cores[Math.floor(Math.random()*cores.length)]}));
+function fundo(t){ const w=innerWidth,h=innerHeight; if(fc.width!==w||fc.height!==h){ fc.width=w; fc.height=h; } fg.clearRect(0,0,w,h);
+  for(let k=0;k<60;k++){ fg.fillStyle=`rgba(255,255,255,${.25+.5*Math.abs(Math.sin(t/1200+k))})`; fg.fillRect((k*97.3)%w,(k*53.7)%h,1.5,1.5); }
+  for(const p of parts){ p.y+=p.v*.016; p.r+=p.vr; if(p.y>1.05){ p.y=-.05; p.x=Math.random(); }
+    fg.save(); fg.translate(p.x*w,p.y*h); fg.rotate(p.r); fg.globalAlpha=.35; const g=fg.createLinearGradient(-p.s/2,-p.s/2,p.s/2,p.s/2); g.addColorStop(0,p.c[0]); g.addColorStop(1,p.c[2]); fg.fillStyle=g; fg.beginPath(); fg.roundRect(-p.s/2,-p.s/2,p.s,p.s,p.s*.2); fg.fill(); fg.restore(); }
+  requestAnimationFrame(fundo); }
+requestAnimationFrame(fundo);
+$('rodape').textContent = `Jogos v${CONFIG.VERSAO}•Desenvolvido por ${CONFIG.DESENVOLVEDOR}`;
+</script>
 </body>
 </html>
